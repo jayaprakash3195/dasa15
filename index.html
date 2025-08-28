@@ -527,6 +527,26 @@ body.dark #planetButtons .btn{
       </select>
       <button id="btnSavePng" class="btn secondary">Save PNG</button>
       <button id="btnSavePdf" class="btn secondary">Save PDF</button>
+      <button id="btnSaveLocal" class="btn secondary">Save to Browser</button>
+<button id="btnLoadLocal" class="btn">Load</button>
+
+      <input id="profileName" type="text" placeholder="Profile name" style="width:140px" />
+<select id="profileList" style="max-width:180px"></select>
+
+<button id="btnSaveProfile"  class="btn secondary">Save Profile</button>
+<button id="btnLoadProfile"  class="btn">Load Profile</button>
+<button id="btnDeleteProfile" class="btn">Delete</button>
+
+<button id="btnExportProfile" class="btn secondary">Export JSON</button>
+<button id="btnImportProfile" class="btn">Import JSON</button>
+<input id="importFile" type="file" accept="application/json" style="display:none" />
+<label id="autoSaveWrap" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--ring);border-radius:10px;background:#edf3ff">
+  <input type="checkbox" id="autoSaveToggle" checked />
+  <span id="autoSaveLabel">Auto-Save</span>
+</label>
+<span id="autoSaveStamp" class="calc-chip" title="Last auto-save" style="display:none"></span>
+
+
       <button id="btnHelp" class="btn">?</button>
     </div>
   </header>
@@ -632,6 +652,8 @@ body.dark #planetButtons .btn{
     </div>
   </div>
 </section>
+
+
    <!-- Planet buttons -->
   <div id="planetButtons"></div>
   <button id="btnAnimate" class="btn">Animate 1–108</button>
@@ -1013,17 +1035,6 @@ btnApi.addEventListener('click', async ()=>{
     const data=await res.json();
     if(!data.output){ apiResult.textContent="API response missing planet data."; return; }
     const planets=data.output; savedPlanetsForChart=planets;
-    // Save the latest result (planets + a few inputs) to IndexedDB
-idbPlanets.put('latest', {
-  planets,                                   // the API object you already have
-  inputs: {
-    dob: dob_api.value,
-    tob: tob_api.value,
-    place: placeInput.value,
-    lat: selectedLat, lon: selectedLon
-  }
-}).catch(console.error);
-
 
     // Fill Moon & Lagna (manual form)
     const m=decToDMS(planets.Moon.fullDegree); moon_deg.value=m.deg; moon_min.value=m.min; moon_sec.value=m.sec;
@@ -1843,59 +1854,22 @@ function placeMoonSymbolToPada(globalPada){ document.querySelectorAll('.moon-pad
 
 /* ===== Run & Save ===== */
 btnRun.addEventListener('click', ()=>run());
-/* ===== Run & Save ===== */
 function run(){
   mode='current';
+  const dobStr=dob_.value;
+  const mdeg=parseInt(moon_deg.value)||0, mmin=parseInt(moon_min.value)||0, msec=parseInt(moon_sec.value)||0;
+  const moon=mdeg + mmin/60 + msec/3600;
+  if(isNaN(moon)||moon<0||moon>=360){ alert(LANG==='ta'?'சந்திரன் நீளம் சரிபார்க்கவும்.':'Check Moon longitude.'); return; }
+  const dobDate=new Date(dobStr); if(isNaN(dobDate.getTime())){ alert(LANG==='ta'?'பிறந்த தேதி சரிபார்க்கவும்.':'Check DOB.'); return; }
+  const now=caldate.value? new Date(caldate.value): new Date();
 
-  const dobStr = dob_.value;
-  const mdeg   = parseInt(moon_deg.value) || 0;
-  const mmin   = parseInt(moon_min.value) || 0;
-  const msec   = parseInt(moon_sec.value) || 0;
-  const moon   = mdeg + mmin/60 + msec/3600;
+  vimData=dasaTree(moon, dobDate, now);
+  vimCurrentPath=findCurrentPath(vimData);
 
-  if (isNaN(moon) || moon < 0 || moon >= 360) {
-    alert(LANG==='ta' ? 'சந்திரன் நீளம் சரிபார்க்கவும்.' : 'Check Moon longitude.');
-    return;
-  }
-
-  const dobDate = new Date(dobStr);
-  if (isNaN(dobDate.getTime())) {
-    alert(LANG==='ta' ? 'பிறந்த தேதி சரிபார்க்கவும்.' : 'Check DOB.');
-    return;
-  }
-
-  const now = caldate.value ? new Date(caldate.value) : new Date();
-
-  // compute vimshottari + current path
-  vimData        = dasaTree(moon, dobDate, now);
-  vimCurrentPath = findCurrentPath(vimData);
-
-  // redraw UI
   drawChartGrid();
-  if (window.savedPlanetsForChart) {
-    placePlanetsOnChart(window.savedPlanetsForChart);
-  }
+  if(savedPlanetsForChart){ placePlanetsOnChart(savedPlanetsForChart); }
   renderAll(now);
-
-  // === NEW: auto-save last session to IndexedDB (only if planets exist) ===
-  try {
-    const planetsToSave = window.savedPlanetsForChart || null;
-    if (planetsToSave && typeof idbPlanets?.put === 'function') {
-      idbPlanets.put('latest', {
-        planets: planetsToSave,
-        inputs: {
-          dob: dobStr,
-          caldate: caldate.value || '',
-          moon: { deg: mdeg, min: mmin, sec: msec }
-        }
-      }).catch(err => console.error('IndexedDB save failed:', err));
-    }
-  } catch (e) {
-    console.error('Save block error:', e);
-  }
 }
-
-document.getElementById('btnRun')?.addEventListener('click', run);
 
 /* Save PNG/PDF (same) */
 function targetNode(){ return document.getElementById(saveTarget.value); }
@@ -2762,55 +2736,341 @@ window.addEventListener('resize', ()=>{
     };
   }
 })();
-// ---- IndexedDB helper (AstroDB / planets store) ----
-const idbPlanets = (() => {
-  let dbp;
-  function open() {
-    if (dbp) return dbp;
-    dbp = new Promise((resolve, reject) => {
-      if (!('indexedDB' in window)) return reject(new Error('IndexedDB not supported'));
-      const req = indexedDB.open('AstroDB', 1);
-      req.onupgradeneeded = e => {
-        const db = e.target.result;
-        if (!db.objectStoreNames.contains('planets')) {
-          db.createObjectStore('planets', { keyPath: 'id' });
-        }
+/* ============================
+   Multiple Profiles + Export/Import (no Firebase)
+   ============================ */
+const PROFILES_KEY = 'jpAstro:profiles';   // { [name]: payload }
+const STORAGE_KEY  = 'jpAstro:last';       // from earlier (single quick save)
+
+/* Build one payload from current inputs */
+function jp_buildPayload(){
+  const readDMS = (d,m,s)=>({
+    deg: parseInt(document.getElementById(d)?.value || '0',10),
+    min: parseInt(document.getElementById(m)?.value || '0',10),
+    sec: parseInt(document.getElementById(s)?.value || '0',10),
+  });
+  return {
+    version: 1,
+    at: new Date().toISOString(),
+    inputs: {
+      dob     : document.getElementById('dob')?.value || '',
+      caldate : document.getElementById('caldate')?.value || '',
+      moon    : readDMS('moon_deg','moon_min','moon_sec'),
+      lagna   : readDMS('lagna_deg','lagna_min','lagna_sec'),
+    },
+    api: {
+      dob_api : document.getElementById('dob_api')?.value || '',
+      tob_api : document.getElementById('tob_api')?.value || '',
+      place   : document.getElementById('placeInput')?.value || '',
+      lat     : (typeof selectedLat  !== 'undefined' ? selectedLat  : null),
+      lon     : (typeof selectedLon  !== 'undefined' ? selectedLon  : null),
+    },
+    // may be empty if using pure manual flow — OK
+    planetDegrees: (typeof planetDegrees !== 'undefined' ? planetDegrees : {})
+  };
+}
+
+/* If your file also defines the fallback builder (_buildPayload), make it match: */
+
+
+/* Apply payload → refill inputs, rebuild UI, run() */
+function jp_applyPayload(payload){
+  if(!payload) return;
+  const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.value = (v ?? ''); };
+
+  // existing manual fields
+  set('dob',     payload?.inputs?.dob      || '');
+  set('caldate', payload?.inputs?.caldate  || '');
+  const m = payload?.inputs?.moon  || {};
+  const l = payload?.inputs?.lagna || {};
+  set('moon_deg', m.deg);  set('moon_min', m.min);  set('moon_sec', m.sec);
+  set('lagna_deg',l.deg);  set('lagna_min',l.min);  set('lagna_sec',l.sec);
+
+  // NEW: API fields
+  set('dob_api',  payload?.api?.dob_api   || '');
+  set('tob_api',  payload?.api?.tob_api   || '');
+  set('placeInput', payload?.api?.place   || '');
+  // also rehydrate lat/lon in memory (used by API button)
+  if (typeof selectedLat !== 'undefined')  selectedLat  = (payload?.api?.lat ?? null);
+  if (typeof selectedLon !== 'undefined')  selectedLon  = (payload?.api?.lon ?? null);
+
+  // planets + UI rebuild (existing)
+  planetDegrees = payload?.planetDegrees || {};
+  savedPlanetsForChart = (function mapDegsToPlanets(degMap){
+    const out={}; Object.entries(degMap||{}).forEach(([k,deg])=> out[k]={ fullDegree:Number(deg) }); return out;
+  })(planetDegrees);
+
+  ensurePlanetButtons?.();
+  drawChartGrid?.();
+  if (savedPlanetsForChart && Object.keys(savedPlanetsForChart).length){
+    placePlanetsOnChart?.(savedPlanetsForChart);
+    buildPlanetsTable?.(savedPlanetsForChart);
+  }
+  run?.();
+}
+
+/* Storage helpers */
+function jp_loadProfiles(){
+  try { return JSON.parse(localStorage.getItem(PROFILES_KEY) || '{}'); }
+  catch { return {}; }
+}
+function jp_saveProfiles(map){
+  localStorage.setItem(PROFILES_KEY, JSON.stringify(map || {}));
+}
+function jp_refreshProfileList(){
+  const sel = document.getElementById('profileList');
+  if(!sel) return;
+  const map = jp_loadProfiles();
+  const names = Object.keys(map).sort((a,b)=>a.localeCompare(b));
+  sel.innerHTML = '';
+  names.forEach(n=>{
+    const opt = document.createElement('option');
+    opt.value = n; opt.textContent = n;
+    sel.appendChild(opt);
+  });
+}
+
+/* Export helpers */
+function jp_saveAsFile(obj, filename){
+  const blob = new Blob([JSON.stringify(obj,null,2)], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* Buttons */
+document.getElementById('btnSaveProfile')?.addEventListener('click', ()=>{
+  const name = (document.getElementById('profileName')?.value || '').trim();
+  if(!name){ return alert(LANG==='ta' ? 'ப்ரொஃபைல் பெயரை தரவும்.' : 'Please enter a profile name.'); }
+  const map = jp_loadProfiles();
+  map[name] = jp_buildPayload();
+  jp_saveProfiles(map);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(map[name])); // also cache as "last"
+  jp_refreshProfileList();
+  document.getElementById('profileList').value = name;
+  alert(LANG==='ta' ? 'சேமிக்கப்பட்டது.' : 'Saved.');
+});
+
+document.getElementById('btnLoadProfile')?.addEventListener('click', ()=>{
+  const sel = document.getElementById('profileList');
+  const name = sel?.value;
+  if(!name) return alert(LANG==='ta' ? 'ப்ரொஃபைல் ஒன்றை தெரிவுசெய்க.' : 'Select a profile first.');
+  const map = jp_loadProfiles();
+  const payload = map[name];
+  if(!payload) return alert(LANG==='ta' ? 'தகவல் இல்லை.' : 'Profile not found.');
+  jp_applyPayload(payload);
+});
+
+document.getElementById('btnDeleteProfile')?.addEventListener('click', ()=>{
+  const sel = document.getElementById('profileList');
+  const name = sel?.value;
+  if(!name) return alert(LANG==='ta' ? 'ப்ரொஃபைல் ஒன்றை தெரிவுசெய்க.' : 'Select a profile first.');
+  if(!confirm(LANG==='ta' ? `அழிக்கவா: ${name}?` : `Delete profile: ${name}?`)) return;
+  const map = jp_loadProfiles();
+  delete map[name];
+  jp_saveProfiles(map);
+  jp_refreshProfileList();
+  alert(LANG==='ta' ? 'அழிக்கப்பட்டது.' : 'Deleted.');
+});
+
+document.getElementById('btnExportProfile')?.addEventListener('click', ()=>{
+  const sel  = document.getElementById('profileList');
+  const name = sel?.value;
+  const map  = jp_loadProfiles();
+  if(name && map[name]){
+    // Export selected profile
+    jp_saveAsFile({ name, payload: map[name] }, `astro-${name}.json`);
+  }else{
+    // Or export all
+    jp_saveAsFile({ profiles: map }, `astro-all-${new Date().toISOString().slice(0,10)}.json`);
+  }
+});
+
+document.getElementById('btnImportProfile')?.addEventListener('click', ()=>{
+  document.getElementById('importFile')?.click();
+});
+
+document.getElementById('importFile')?.addEventListener('change', async (ev)=>{
+  const file = ev.target.files?.[0];
+  if(!file) return;
+  try{
+    const text = await file.text();
+    const j = JSON.parse(text);
+
+    const map = jp_loadProfiles();
+    if (j && j.version && j.inputs){
+      // single payload file
+      const base = (document.getElementById('profileName')?.value || 'Imported');
+      let name = base, i=1;
+      while(map[name]) name = `${base}-${i++}`;       // avoid overwrite
+      map[name] = j;
+    } else if (j && j.payload && j.name){
+      // { name, payload }
+      map[j.name] = j.payload;
+    } else if (j && j.profiles && typeof j.profiles === 'object'){
+      // { profiles: { name: payload } }
+      Object.entries(j.profiles).forEach(([k,v])=> map[k] = v);
+    } else {
+      return alert(LANG==='ta' ? 'தவறான JSON.' : 'Unrecognized JSON format.');
+    }
+
+    jp_saveProfiles(map);
+    jp_refreshProfileList();
+    alert(LANG==='ta' ? 'இறக்குமதி முடிந்தது.' : 'Import complete.');
+  }catch(e){
+    alert('Import failed: ' + e.message);
+  }finally{
+    ev.target.value = ''; // reset file input
+  }
+});
+
+/* Initialize list on load */
+jp_refreshProfileList();
+
+
+/* ===== Auto-Save (debounced) ===== */
+
+const AUTO_SAVE_KEY = 'jpAstro:autoSave';
+
+function _debounce(fn, wait){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), wait); }; }
+
+// Use your existing builder if present; else minimal fallback
+const _buildPayload = (typeof jp_buildPayload === 'function')
+  ? jp_buildPayload
+  : function(){
+      const read = (d,m,s)=>({
+        deg: parseInt(document.getElementById(d)?.value || '0',10),
+        min: parseInt(document.getElementById(m)?.value || '0',10),
+        sec: parseInt(document.getElementById(s)?.value || '0',10),
+      });
+      return {
+        version: 1,
+        at: new Date().toISOString(),
+        inputs:{
+          dob: document.getElementById('dob')?.value || '',
+          caldate: document.getElementById('caldate')?.value || '',
+          moon: read('moon_deg','moon_min','moon_sec'),
+          lagna: read('lagna_deg','lagna_min','lagna_sec')
+        },
+        planetDegrees: (typeof planetDegrees!=='undefined' ? planetDegrees : {})
       };
-      req.onsuccess = e => resolve(e.target.result);
-      req.onerror = () => reject(req.error);
-    });
-    return dbp;
+    };
+
+function _autoSaveEnabled(){
+  const ui = document.getElementById('autoSaveToggle');
+  if (ui) return ui.checked;
+  // persist setting even if checkbox not yet mounted
+  return localStorage.getItem(AUTO_SAVE_KEY) !== 'off';
+}
+
+function _setAutoSaveEnabled(on){
+  localStorage.setItem(AUTO_SAVE_KEY, on ? 'on' : 'off');
+  const ui = document.getElementById('autoSaveToggle');
+  if (ui) ui.checked = on;
+}
+
+function _showSavedStamp(){
+  const el = document.getElementById('autoSaveStamp');
+  if (!el) return;
+  el.style.display = 'inline-block';
+  el.textContent = new Date().toLocaleTimeString();
+}
+
+const _autoSaveNow = ()=>{
+  if(!_autoSaveEnabled()) return;
+  try{
+    const payload = _buildPayload();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    _showSavedStamp();
+  }catch(e){
+    console.warn('Auto-save failed:', e);
   }
-  async function put(id, data) {
-    const db = await open();
-    return new Promise((res, rej) => {
-      const tx = db.transaction('planets', 'readwrite');
-      tx.objectStore('planets').put({ id, data, ts: Date.now() });
-      tx.oncomplete = () => res(true);
-      tx.onerror   = () => rej(tx.error);
-    });
-  }
-  async function get(id) {
-    const db = await open();
-    return new Promise((res, rej) => {
-      const tx = db.transaction('planets', 'readonly');
-      const rq = tx.objectStore('planets').get(id);
-      rq.onsuccess = () => res(rq.result?.data || null);
-      rq.onerror   = () => rej(rq.error);
-    });
-  }
-  async function clear() {
-    const db = await open();
-    return new Promise((res, rej) => {
-      const tx = db.transaction('planets', 'readwrite');
-      tx.objectStore('planets').clear();
-      tx.oncomplete = () => res(true);
-      tx.onerror   = () => rej(tx.error);
-    });
-  }
-  return { open, put, get, clear };
+};
+const _autoSaveDebounced = _debounce(_autoSaveNow, 400);
+
+
+
+// Restore saved ON/OFF state on load
+(function initAutoSaveToggle(){
+  const was = localStorage.getItem(AUTO_SAVE_KEY);
+  const on = (was !== 'off'); // default ON
+  _setAutoSaveEnabled(on);
+  document.getElementById('autoSaveToggle')?.addEventListener('change', (e)=>{
+    _setAutoSaveEnabled(!!e.target.checked);
+    if (e.target.checked) _autoSaveDebounced();
+  });
 })();
 
+// Wrap your existing run() once and debounce-save after it finishes
+if (!window.__autoSaveWrapped && typeof run === 'function'){
+  window.__autoSaveWrapped = true;
+  const __run = run;
+  run = function(...args){
+    const out = __run.apply(this, args);
+    _autoSaveDebounced();
+    return out;
+  };
+}
+
+// Also save on key input changes (in case user edits but hasn’t pressed Compute yet)
+['dob_api','tob_api','placeInput','dob','caldate','moon_deg','moon_min','moon_sec','lagna_deg','lagna_min','lagna_sec'].forEach(id=>{
+  const el = document.getElementById(id);
+  el?.addEventListener('change', _autoSaveDebounced);
+  el?.addEventListener('input',  _autoSaveDebounced);
+});
+
+// Save after API completes (your btnApi handler already calls run(); this is just extra safety)
+document.getElementById('btnApi')?.addEventListener('click', ()=> setTimeout(_autoSaveDebounced, 0));
+
+/* ==== Local Save/Load (no Firebase) ==== */
+
+
+/** read Degree-Minute-Second triplet from three inputs */
+function readDMS(idDeg, idMin, idSec){
+  const d = parseInt(document.getElementById(idDeg)?.value ?? '0', 10);
+  const m = parseInt(document.getElementById(idMin)?.value ?? '0', 10);
+  const s = parseInt(document.getElementById(idSec)?.value ?? '0', 10);
+  return { deg: d, min: m, sec: s };
+}
+
+/** build a minimal planets object from a { Ascendant:deg, Sun:deg, ... } map */
+function fromDegreesToPlanets(degMap){
+  const out = {};
+  Object.entries(degMap || {}).forEach(([apiKey, deg])=>{
+    out[apiKey] = { fullDegree: Number(deg) };
+  });
+  return out;
+}
+
+function saveLocal(){
+  try{
+    const payload = jp_buildPayload();        // now includes api{}
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    alert(LANG==='ta' ? 'உங்கள் தரவு இந்த உலாவியில் சேமிக்கப்பட்டது.' : 'Saved to this browser.');
+  }catch(e){
+    alert('Save failed: ' + e.message);
+  }
+}
+
+function loadLocal(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return alert(LANG==='ta' ? 'சேமித்தது இல்லை.' : 'Nothing saved yet.');
+    const payload = JSON.parse(raw);
+
+    // apply everything (manual + api + planets) in one place
+    jp_applyPayload(payload);
+
+    alert(LANG==='ta' ? 'சேமித்த தரவு ஏற்றப்பட்டது.' : 'Loaded.');
+  }catch(e){
+    alert('Load failed: ' + e.message);
+  }
+}
+
+// buttons
+document.getElementById('btnSaveLocal')?.addEventListener('click', saveLocal);
+document.getElementById('btnLoadLocal')?.addEventListener('click', loadLocal);
 
 
 /* ===== Init ===== */
@@ -2821,57 +3081,6 @@ const idbPlanets = (() => {
   applyLang();
   drawChartGrid();
 })();
-
-(async function restoreLastSession(){
-  try{
-    if (!window.idbPlanets?.get) return;
-    const saved = await idbPlanets.get('latest');
-    if (!saved) return;
-
-    // 1) Put planets back into your globals
-    window.savedPlanetsForChart = saved.planets || null;
-
-    // also rebuild planetDegrees for the planet buttons/table
-    const allow = ['Ascendant','Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Rahu','Ketu'];
-    window.planetDegrees = {};
-    if (saved.planets) {
-      Object.keys(saved.planets).forEach(k=>{
-        if (allow.includes(k) && typeof saved.planets[k]?.fullDegree === 'number'){
-          planetDegrees[k] = saved.planets[k].fullDegree;
-        }
-      });
-    }
-
-    // 2) Restore inputs (if we saved them)
-    if (saved.inputs){
-      if (saved.inputs.dob)   dob_.value = saved.inputs.dob;
-      if (saved.inputs.caldate) caldate.value = saved.inputs.caldate;
-
-      if (saved.inputs.moon){
-        const {deg=0,min=0,sec=0} = saved.inputs.moon;
-        moon_deg.value = deg; moon_min.value = min; moon_sec.value = sec;
-      } else if (saved.planets?.Moon?.fullDegree != null){
-        // fallback: derive moon DMS from saved planets
-        const m = decToDMS(saved.planets.Moon.fullDegree);
-        moon_deg.value = m.deg; moon_min.value = m.min; moon_sec.value = m.sec;
-      }
-    }
-
-    // 3) Rebuild UI pieces that depend on planets
-    ensurePlanetButtons?.();
-    drawChartGrid?.();
-    if (window.savedPlanetsForChart) placePlanetsOnChart?.(window.savedPlanetsForChart);
-    if (saved.planets) buildPlanetsTable?.(saved.planets);
-
-    // 4) Compute & render everything for the restored state
-    run?.();
-  }catch(err){
-    console.error('Restore failed:', err);
-  }
-})();
-
-
-
 </script>
 <script>const dob_ = document.getElementById('dob');</script>
 </body>
