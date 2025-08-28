@@ -1,0 +1,2878 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Jps Astro — 108 பாதங்கள் & விம்சோத்தரி</title>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+<style>
+
+
+/* === Glowing effect for current highlights === */
+
+/* Tunables */
+:root{
+  --glow-size: 14px;
+  --glow-dasa:  rgba(23,103,26,.55);   /* matches --green1 */
+  --glow-puthi: rgba(64,190,74,.55);   /* matches --green2 */
+  --glow-anth:  rgba(33,87,42,.55);    /* darker edge for light anthara bg */
+}
+body.dark{
+  --glow-size: 16px;
+  --glow-dasa:  rgba(61,255,102,.40);
+  --glow-puthi: rgba(128,255,162,.40);
+  --glow-anth:  rgba(185,244,186,.35);
+}
+
+/* Common keyframes */
+@keyframes glowDasa {
+  0%,100% { box-shadow: 0 0 0 0 var(--glow-dasa); }
+  50%     { box-shadow: 0 0 var(--glow-size) 4px var(--glow-dasa); }
+}
+@keyframes glowPuthi {
+  0%,100% { box-shadow: 0 0 0 0 var(--glow-puthi); }
+  50%     { box-shadow: 0 0 var(--glow-size) 4px var(--glow-puthi); }
+}
+@keyframes glowAnth {
+  0%,100% { box-shadow: 0 0 0 0 var(--glow-anth); }
+  50%     { box-shadow: 0 0 var(--glow-size) 4px var(--glow-anth); }
+}
+
+/* Apply glow to the pada lines you already highlight */
+.line.highlight-pada-dasa{
+  position: relative; z-index: 1;    /* ensure shadow shows above neighbors */
+  animation: glowDasa 1.8s ease-in-out infinite;
+}
+.line.highlight-pada-puthi{
+  position: relative; z-index: 1;
+  animation: glowPuthi 1.8s ease-in-out infinite;
+}
+.line.highlight-pada-anthara{
+  position: relative; z-index: 1;
+  animation: glowAnth 1.8s ease-in-out infinite;
+}
+
+/* Apply glow to the rasi-name title chips when owner highlight is active */
+.box.owner-rasi-dasa  .rasi-name{
+  animation: glowDasa 2s ease-in-out infinite;
+}
+.box.owner-rasi-puthi .rasi-name{
+  animation: glowPuthi 2s ease-in-out infinite;
+}
+.box.owner-rasi-anth  .rasi-name{
+  animation: glowAnth  2s ease-in-out infinite;
+}
+
+/* Respect user motion preferences */
+@media (prefers-reduced-motion: reduce){
+  .line.highlight-pada-dasa,
+  .line.highlight-pada-puthi,
+  .line.highlight-pada-anthara,
+  .box.owner-rasi-dasa .rasi-name,
+  .box.owner-rasi-puthi .rasi-name,
+  .box.owner-rasi-anth .rasi-name{
+    animation: none !important;
+  }
+}
+  :root{
+    --bg:#fffef8; --card:#fffdf5; --ink:#0f172a; --muted:#475569;
+    --brand:#175397; --accent:#116504; --outline:#a1c786; --shadow:0 1px 6px #d3efe1; --ring:#2f76d2;
+    --green1:#17671a; --green2:#40be4a; --green3:#b9f4ba;
+    --selD:#e8f0ff; --selD-b:#3b82f6; --selP:#e9fff0; --selP-b:#10b981; --selA:#fff3e6; --selA-b:#f59e0b;
+    --sticky-top:8px; --radius:12px;
+    --animB1-bg:#fff3e6;  --animB1-outline:#f59e0b; /* 1–36  (warm) */
+    --animB2-bg:#e9fff0;  --animB2-outline:#10b981; /* 37–72 (green) */
+    --animB3-bg:#eaf2ff;  --animB3-outline:#3b51f6; /* 73–108 (blue) */
+    --pulse-on:  rgba(47,118,210,.35);
+    --pulse-off: rgba(47,118,210,0);
+  }
+  body.dark{
+    --bg:#0b0f14; --card:#0f141b; --ink:#e5eef9; --muted:#9fb0c4;
+    --brand:#7ab8ff; --accent:#3ddc6a; --outline:#2f4b59; --shadow:0 1px 6px #0b2028; --ring:#3b82f6;
+    --selD:#0f2036; --selP:#0f2016; --selA:#251a0b;
+    --animB1-bg:#2a1f11;  --animB1-outline:#f59e0b;
+    --animB2-bg:#0f2016;  --animB2-outline:#10b981;
+    --animB3-bg:#0f2036;  --animB3-outline:#3b82f6;
+    --pulse-on:  rgba(6,212,10,.55);
+    --pulse-off: rgba(6,212,10,0);
+
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,'Latha',Arial,sans-serif}
+  .container{max-width:1100px;margin:0 auto;padding:16px}
+  header h2{margin:6px 0 12px;text-align:center}
+  header h2 span{color:var(--brand)}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:8px 0 12px}
+  .btn{padding:8px 14px;border:1px solid var(--ring);border-radius:10px;background:#edf3ff;color:#08203a;font-weight:600;cursor:pointer}
+  body.dark .btn{background:#102133;color:#cfe5ff;border-color:#274462}
+  .btn.secondary{background:#eef7ee;border-color:#2ea44f}
+  body.dark .btn.secondary{background:#0f2016;color:#d6ffe1;border-color:#1e7a3a}
+  select{padding:8px 10px;border:1px solid #d1d5db;border-radius:10px;background:#fff}
+  body.dark select{background:#0f141b;color:var(--ink);border-color:#2b3642}
+
+  #current{position:sticky;top:var(--sticky-top);z-index:5;background:var(--card);border:1px solid var(--outline);
+           border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;margin:10px auto 14px}
+
+  .form{display:grid;gap:10px;background:var(--card);border:1px solid var(--outline);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-weight:600}
+  .field input[type="text"],.field input[type="date"],.field input[type="time"],.field input[type="number"], .field input[type="datetime-local"]{
+    padding:8px 10px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#111827}
+  body.dark .field input{background:#0f141b;color:var(--ink);border-color:#2b3642}
+
+  .pos-relative{position:relative}
+  #suggestions-box{
+    position:absolute;top:calc(100% + 4px);left:0;right:0;border:1px solid #aaa;background:#fff;
+    max-height:220px;overflow-y:auto;z-index:9999;display:none;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.12)
+  }
+  body.dark #suggestions-box{background:#0f141b;border-color:#2b3642}
+  #suggestions-box div{padding:10px 12px;cursor:pointer}
+  #suggestions-box div.active{background:#eaf2ff}
+  #suggestions-box div:hover{background:#eef5ff} body.dark #suggestions-box div:hover{background:#122032}
+  #suggestions-empty{padding:10px 12px;color:var(--muted)}
+
+  .south-chart{display:grid;grid-template-columns:repeat(4,1fr);grid-template-areas:
+    "r10 r11 r12 r01" "r09 photo photo r02" "r08 photo photo r03" "r07 r06 r05 r04";
+    gap:6px;max-width:1020px;margin:8px auto 18px;min-height:1200;height:flex;}
+  .box{background:var(--card);border:2px solid var(--accent);border-radius:10px;box-shadow:var(--shadow);
+    font-size:12.5px;;text-align:left;padding:6px 3px;min-height:300px;height: flex;transition:transform .15s}
+  .box:hover{transform:scale(1.01)}
+  .rasi-name{font-weight:800;font-size:15px;;text-align:center;margin-bottom:4px}
+  .line{cursor:pointer;border-radius:6px;padding:3px 3px;margin-bottom:2px;line-height:1.45;transition:background .2s,color .2s;display:flex;align-items:center;gap:6px}
+  .line:hover{background:#e9f0f9} body.dark .line:hover{background:#182330}
+  .r01{grid-area:r11}.r02{grid-area:r12}.r03{grid-area:r01}.r04{grid-area:r02}.r05{grid-area:r03}.r06{grid-area:r04}
+  .r07{grid-area:r05}.r08{grid-area:r06}.r09{grid-area:r07}.r10{grid-area:r08}.r11{grid-area:r09}.r12{grid-area:r10}.photo{grid-area:photo}
+
+  /* GREEN highlights (fixed for current time path) */
+  .highlight-pada-dasa{background:var(--green1)!important;color:#fff!important;font-weight:700}
+  .highlight-pada-puthi{background:var(--green2)!important;color:#fff!important;font-weight:700}
+  .highlight-pada-anthara{background:var(--green3)!important;color:#21572a!important;font-weight:700}
+ 
+  
+  /* Lagna numbered bands — small color badges with 1..12 */
+  .line[class*="highlight-pada-"]::before{
+    display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:4px;text-align:center;
+    font-weight:800;font-size:12px;color:#111;;
+  }
+  .highlight-pada-1::before{content:"1"; background:#c7f9cc;}
+  .highlight-pada-2::before{content:"2"; background:#ffedb5;}
+  .highlight-pada-3::before{content:"3"; background:#cfe8ff;}
+  .highlight-pada-4::before{content:"4"; background:#ffd6d6;}
+  .highlight-pada-5::before{content:"5"; background:#c7f9cc;}
+  .highlight-pada-6::before{content:"6"; background:#ffedb5;}
+  .highlight-pada-7::before{content:"7"; background:#cfe8ff;}
+  .highlight-pada-8::before{content:"8"; background:#ffd6d6;}
+  .highlight-pada-9::before{content:"9"; background:#c7f9cc;}
+  .highlight-pada-10::before{content:"10"; background:#ffedb5;}
+  .highlight-pada-11::before{content:"11"; background:#cfe8ff;}
+  .highlight-pada-12::before{content:"12"; background:#ffd6d6;}
+  /* Outline only the NUMBER badge of starting padas (not the whole line) */
+.lagna-start{ outline: none !important; }                    /* kill cell outline */
+.line.lagna-edge::before{ border:2px solid; }                /* add a border to the chip */
+.lagna-start-b1::before{ border-color:#1b5e20; }             /* band 1: 1,5,9  */
+.lagna-start-b2::before{ border-color:#b45309; }             /* band 2: 2,6,10 */
+.lagna-start-b3::before{ border-color:#1e40af; }             /* band 3: 3,7,11 */
+.lagna-start-b4::before{ border-color:#991b1b; }             /* band 4: 4,8,12 */
+
+/* Numbers before Rasi titles: show chip + outline in band color */
+.rasi-name .rasi-num{
+  display:inline-block; min-width:18px; height:18px; line-height:18px;
+  border-radius:4px; text-align:center; font-weight:800; font-size:12px;
+  margin-right:6px; vertical-align:middle;
+}
+.rasi-num.b1{ background:#c7f9cc; border:2px solid #1b5e20; color:#0a2e14; }
+.rasi-num.b2{ background:#ffedb5; border:2px solid #b45309; color:#4a2c00; }
+.rasi-num.b3{ background:#cfe8ff; border:2px solid #1e40af; color:#0b235d; }
+.rasi-num.b4{ background:#ffd6d6; border:2px solid #991b1b; color:#5c0b0b; }
+
+  table{width:100%;border-collapse:collapse}
+  th,td{border:1px solid #cbd5e1;padding:8px;text-align:left}
+  body.dark th, body.dark td{border-color:#2b3642}
+  thead th{background:#f3f6fb;font-weight:700}
+  body.dark thead th{background:#121b27}
+
+  .card{background:var(--card);border:1px solid var(--outline);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px}
+  .splits{display:grid;gap:10px}
+  .split-block{border:1px dashed #cbd5e1;border-radius:10px;padding:8px}
+  body.dark .split-block{border-color:#2b3642}
+  .split-title{font-weight:800;margin-bottom:4px}
+  .pada-row{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px dashed #e5e7eb}
+  .pada-row:last-child{border-bottom:none}
+  .pct{font-weight:800}
+  .muted{color:var(--muted)}
+  .split-block.sel-dasa{outline:2px solid var(--selD-b); background:var(--selD)}
+  .split-block.sel-puthi{outline:2px solid var(--selP-b); background:var(--selP)}
+  .split-block.sel-anth{outline:2px solid var(--selA-b); background:var(--selA)}
+
+  /* 3-column Dasa Tree */
+  #dasaPanel .dasa-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  #dasaPanel h4{margin:4px 0 8px}
+  .list{list-style:none;margin:0;padding:0}
+  .list li{padding:8px;border:1px solid var(--outline);border-radius:10px;margin-bottom:8px;background:var(--card);cursor:pointer}
+  .list li.tree-sel-dasa{outline:2px solid var(--selD-b); background:var(--selD)}
+  .list li.tree-sel-puthi{outline:2px solid var(--selP-b); background:var(--selP)}
+  .list li.tree-sel-anth{outline:2px solid var(--selA-b); background:var(--selA)}
+  .line-mini{font-size:.92em;color:var(--muted);margin-top:2px}
+
+  #planetButtons{display:none;flex-wrap:wrap;gap:6px;justify-content:center;margin:10px 0}
+  #planetButtons button{padding:6px 10px;border:1px solid #374151;border-radius:10px;background:#fff;cursor:pointer}
+  body.dark #planetButtons button{background:#0f141b;border-color:#2b3642;color:var(--ink)}
+  #planetButtons button.active{outline:2px solid var(--ring);background:#f2f8ff}
+  body.dark #planetButtons button.active{background:#102133}
+  /* Two-card layout for the manual form */
+.form-two{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+  @media (max-width:900px){
+    .form-two{ grid-template-columns:1fr; }
+    .row,.row3{grid-template-columns:1fr}
+    #dasaPanel .dasa-grid{grid-template-columns:1fr}
+    .south-chart{grid-template-columns:repeat(2,1fr);grid-template-areas:
+      "r11 r12" "r01 r02" "r03 r04" "r05 r06" "r07 r08" "r09 r10"}
+  }
+ 
+/* Base animation effect (keep pulse, no fixed color here) */
+.anim-cell{
+  animation:pulsePada 900ms ease-out infinite;
+  border-radius:8px;
+}
+
+/* Band-specific coloring */
+.anim-band-1{ background:var(--animB1-bg); outline:2px solid var(--animB1-outline); }
+.anim-band-2{ background:var(--animB2-bg); outline:2px solid var(--animB2-outline); }
+.anim-band-3{ background:var(--animB3-bg); outline:2px solid var(--animB3-outline); }
+#blinkControls button.active {
+  background: #175397;
+  color: white;
+  border: 1px solid #0d3b6f;
+}
+
+#blinkControls{ display:flex; gap:6px; }
+
+#blinkStatus{ margin-left:8px; font-weight:700; }
+
+
+@keyframes pulsePada{
+  0%   { box-shadow:0 0 0 0   var(--pulse-on); }
+  70%  { box-shadow:0 0 0 12px var(--pulse-off); }
+  100% { box-shadow:0 0 0 0   var(--pulse-off); }
+}
+
+/* Owner highlight ON THE TITLE ONLY */
+.box.owner-rasi-dasa  .rasi-name{
+  background: var(--green1);
+  color:#fff;
+  padding:2px 8px;
+  border-radius:8px;
+}
+.box.owner-rasi-puthi .rasi-name{
+  background: var(--green2);
+  color:#fff;
+  padding:2px 8px;
+  border-radius:8px;
+}
+.box.owner-rasi-anth  .rasi-name{
+  background: var(--green3);
+  color:#21572a; /* to match your anthara chip style */
+  padding:2px 8px;
+  border-radius:8px;
+}
+/* Flat 3×4 layout for rasiChart */
+#rasiChart.flat3{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-areas: none !important; /* kill special areas */
+  gap:6px;
+}
+
+/* When flat, cancel the area mapping from .r01..r12 */
+#rasiChart.flat3 .r01,
+#rasiChart.flat3 .r02,
+#rasiChart.flat3 .r03,
+#rasiChart.flat3 .r04,
+#rasiChart.flat3 .r05,
+#rasiChart.flat3 .r06,
+#rasiChart.flat3 .r07,
+#rasiChart.flat3 .r08,
+#rasiChart.flat3 .r09,
+#rasiChart.flat3 .r10,
+#rasiChart.flat3 .r11,
+#rasiChart.flat3 .r12{
+  grid-area: auto !important;
+}
+
+/* Keep it readable on small screens */
+@media (max-width:900px){
+  #rasiChart.flat3{ grid-template-columns: repeat(2, 1fr); }
+}
+/* Dark-green dot on the active nakshatra-pada cell (only during Rasi-Name sequence ON) */
+.pada-dot-dark{
+  display:inline-block;
+  width:8px; height:8px;
+  border-radius:50%;
+  margin-left:6px;
+  background:#0f5132;            /* dark green */
+  border:1px solid #06321e;
+  box-shadow:0 0 6px rgba(6,50,30,.45);
+  vertical-align:middle;
+}
+body.dark .pada-dot-dark{
+  background:#22c55e;
+  border-color:#14532d;
+  box-shadow:0 0 8px rgba(20,83,45,.55);
+}
+/* Number chip before each rasi title */
+.rasi-name .rasi-numchip{
+  display:inline-block;
+  min-width:20px; height:20px; line-height:20px;
+  border-radius:6px;
+  text-align:center;
+  font-weight:900; font-size:12px;
+  margin-right:8px;
+  color:#111;
+}
+
+/* Same palette as lagna band 1..12 */
+.rasi-name .numchip-1 { background:#c7f9cc; }
+.rasi-name .numchip-2 { background:#ffedb5; }
+.rasi-name .numchip-3 { background:#cfe8ff; }
+.rasi-name .numchip-4 { background:#ffd6d6; }
+.rasi-name .numchip-5 { background:#c7f9cc; }
+.rasi-name .numchip-6 { background:#ffedb5; }
+.rasi-name .numchip-7 { background:#cfe8ff; }
+.rasi-name .numchip-8 { background:#ffd6d6; }
+.rasi-name .numchip-9 { background:#c7f9cc; }
+.rasi-name .numchip-10{ background:#ffedb5; }
+.rasi-name .numchip-11{ background:#cfe8ff; }
+.rasi-name .numchip-12{ background:#ffd6d6; }
+
+/* Same “start” emphasis as lagna-start */
+.rasi-name .rasi-numchip.lagna-start-chip{
+  outline:2px solid #1b5e20;
+}
+/* Pada nav buttons inside the sticky summary */
+.pada-nav {
+  display:inline-flex;
+  gap:6px;
+  margin-left:8px;
+  vertical-align:middle;
+}
+.pada-nav button{
+  padding:2px 6px;
+  border:1px solid var(--outline);
+  border-radius:6px;
+  background:var(--card);
+  color:var(--ink);
+  font-weight:700;
+  cursor:pointer;
+}
+.pada-nav button:hover{ background:#eaf2ff; }
+body.dark .pada-nav button:hover{ background:#122032; }
+
+.calc-chip{
+  display:inline-block;
+  padding:4px 8px;
+  border:1px solid var(--outline);
+  border-radius:8px;
+  background:var(--card);
+  font-weight:700;
+  margin-left:8px;
+}
+/* Vathai / Vainasigam markers */
+.pada-dot-blue,
+.pada-dot-orange{
+  display:inline-block; width:8px; height:8px; border-radius:50%;
+  margin-left:6px; vertical-align:middle; box-shadow:0 0 6px rgba(0,0,0,.25);
+}
+.pada-dot-blue  { background:#2563eb; border:1px solid #1e40af; }  /* blue */
+.pada-dot-orange{ background:#f97316; border:1px solid #c2410c; }  /* orange */
+
+body.dark .pada-dot-blue  { background:#60a5fa; border-color:#1d4ed8; box-shadow:0 0 8px rgba(29,78,216,.45); }
+body.dark .pada-dot-orange{ background:#fb923c; border-color:#ea580c; box-shadow:0 0 8px rgba(234,88,12,.45); }
+
+/* star on clicked pada */
+.pada-star{
+  margin-left:6px; font-size:1.05em; line-height:1;
+  filter: drop-shadow(0 0 3px rgba(0,0,0,.25));
+}
+/* Current (by calculated date/time) highlight in the Dasa Tree */
+.list li.tree-cur-dasa  { border-left:4px solid var(--selD-b); }
+.list li.tree-cur-puthi { border-left:4px solid var(--selP-b); }
+.list li.tree-cur-anth  { border-left:4px solid var(--selA-b); }
+
+/* ----- Mobile legend as bottom sheet ----- */
+@media (max-width:900px){
+  /* Make it a slide-up panel */
+  #legend{
+    display:block !important;          /* ignore inline display:none */
+    position:fixed;
+    left:0; right:0; bottom:0;
+    max-height:70vh;
+    transform:translateY(110%);
+    transition:transform .25s ease;
+    z-index:99999;
+    border-top-left-radius:16px;
+    border-top-right-radius:16px;
+    padding-bottom:56px;               /* room for sticky close row */
+  }
+  #legend.open{ transform:translateY(0); }
+
+  /* Header row with close button */
+  #legend .legend-head{
+    position:sticky; top:0;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 8px;
+    background:var(--card);
+    border-bottom:1px solid var(--outline);
+    border-top-left-radius:16px;
+    border-top-right-radius:16px;
+    z-index:1;
+  }
+  #legend .legend-close{
+    border:1px solid var(--ring);
+    background:#edf3ff;
+    color:#08203a;
+    border-radius:10px;
+    padding:6px 10px;
+    font-weight:700;
+  }
+  body.dark #legend .legend-close{ background:#102133; color:#cfe5ff; border-color:#274462; }
+}
+/* Responsive planets table → card rows on mobile */
+@media (max-width:900px){
+  #planetsCard{ padding:10px; }
+  #planetsDmsTable{
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0 8px;         /* space between card-rows */
+    font-size:13px;
+  }
+  #planetsDmsTable thead{ display:none; }  /* we’ll show labels via ::before */
+
+  #planetsDmsTable tr{
+    display:block;
+    background:var(--card);
+    border:1px solid var(--outline);
+    border-radius:12px;
+    box-shadow:var(--shadow);
+    padding:8px 10px;
+  }
+  #planetsDmsTable td{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:14px;
+    border:none;
+    border-bottom:1px dashed var(--outline);
+    padding:8px 4px;
+    word-break:break-word;
+  }
+  #planetsDmsTable td:last-child{ border-bottom:none; }
+
+  /* Left labels from data-label */
+  #planetsDmsTable td::before{
+    content:attr(data-label);
+    font-weight:700;
+    color:var(--muted);
+    min-width:44%;
+  }
+
+  /* Make planet name stand out slightly */
+  #planetsDmsTable td[data-label] + td::before{
+    min-width:44%;
+  }
+}
+/* Planet buttons styled like blink controls */
+#planetButtons{
+  display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:10px 0;
+}
+#planetButtons .btn{
+  padding:6px 10px; border:1px solid #374151; border-radius:10px; background:#c6c3f0; cursor:pointer;
+}
+body.dark #planetButtons .btn{
+  background:#0f141b; border-color:#2b3642; color:var(--ink);
+}
+/* active look = same as blink buttons */
+#planetButtons .btn.active{
+  background:#175397; color:#fff; border:1px solid #0d3b6f;
+}
+
+
+
+</style>
+</head>
+<body>
+<div class="container" id="app">
+
+  <header>
+    <h2>🌟 <span>Jps Astro Research</span> 🌟</h2>
+    <div class="toolbar">
+      <button id="langToggle" class="btn">தமிழ் / English</button>
+      <button id="themeToggle" class="btn">Light / Dark</button>
+      <select id="saveTarget">
+        <option value="app">Save: Full page</option>
+        <option value="current">Save: Summary</option>
+        <option value="rasiChart">Save: Rasi Chart</option>
+        <option value="dasaPanel">Save: Dasa Tree</option>
+        <option value="currentSplits">Save: Current Splits</option>
+        <option value="planetsCard">Save: Planets Table</option>
+      </select>
+      <button id="btnSavePng" class="btn secondary">Save PNG</button>
+      <button id="btnSavePdf" class="btn secondary">Save PDF</button>
+      <button id="btnHelp" class="btn">?</button>
+    </div>
+  </header>
+
+  <!-- Sticky Summary (no % here) -->
+  <div id="current" class="card"></div>
+  <section class="card" id="legend" style="display:none">
+  <div class="legend-head">
+    <b>Quick Help / விளக்கம்</b>
+    <button id="legendClose" class="legend-close" type="button">×</button>
+  </div>
+  <ul>
+    <li><span class="highlight-pada-dasa">தசை</span>, <span class="highlight-pada-puthi">புக்தி</span>, <span class="highlight-pada-anthara">அந்தரம்</span> — நடப்பு பாதம் (கட்டத்தில் நிரந்தர ஹைலைட்).</li>
+    <li>லக்னம் முதல் 12 குழுக்கள் — பெயருக்கு முன் சிறு வண்ண பெட்டியில் 1–12.</li>
+    <li>தசை மரத்தில் சொடுக்கினால் Current Splits மட்டும் வலுப்படுத்தப்படும்; கட்டம் மாறாது.</li>
+  </ul>
+</section>
+
+
+  <!-- API form -->
+  <section class="form" id="apiFormWrap">
+    <div class="row">
+      <div class="field">
+        <label id="lblDobApi">பிறந்த தேதி</label>
+        <input type="date" id="dob_api" />
+      </div>
+      <div class="field">
+        <label id="lblTobApi">பிறந்த நேரம்</label>
+        <input type="time" id="tob_api" />
+      </div>
+    </div>
+    <div class="row">
+      <div class="field pos-relative">
+        <label id="lblPlace">பிறந்த இடம்</label>
+        <input type="text" id="placeInput" placeholder="தொடங்குங்கள்..." autocomplete="off" />
+        <div id="suggestions-box"></div>
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <button id="btnApi" class="btn secondary" type="button">API மூலம் கணக்கிடு</button>
+      </div>
+    </div>
+    <pre id="apiResult" class="muted" style="white-space:pre-wrap"></pre>
+  </section>
+  <!-- Planets table (hidden until API) -->
+  <section class="card" id="planetsCard" style="display:none;">
+    <table id="planetsDmsTable" style="margin-top:10px">
+      <thead>
+        <tr>
+          <th id="thPlanet">கிரகம்</th>
+          <th id="thDeg"> அளவு(° ' ")</th>
+          <th id="thNak">நட்சத்திரம் - பாதம்</th>
+          <th id="thRasi">ராசி</th>
+          <th id="thRasiLord">ராசி அதிபதி</th>
+          <th id="thNakLord">நட்சத்திர அதிபதி</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <!-- Manual form -->
+  <section id="manualFormWrap" class="form-two">
+  <!-- Box 1: DOB + Lagna + Moon -->
+  <div class="form" id="manualBox1">
+    <div class="row">
+      <div class="field">
+        <label id="lblDob">பிறந்த தேதி</label>
+        <input type="date" id="dob" />
+      </div>
+      <div class="field">
+        <label id="lblLagna">லக்னம் Degree (° ' ")</label>
+        <div style="display:flex;gap:6px">
+          <input type="number" id="lagna_deg" min="0" max="359" step="1" placeholder="°" />
+          <input type="number" id="lagna_min" min="0" max="59" step="1" placeholder="'" />
+          <input type="number" id="lagna_sec" min="0" max="59" step="1" placeholder="&quot;" />
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label id="lblMoon">சந்திரன் Degree (° ' ")</label>
+        <div style="display:flex;gap:6px">
+          <input type="number" id="moon_deg" min="0" max="359" step="1" placeholder="°" />
+          <input type="number" id="moon_min" min="0" max="59" step="1" placeholder="'" />
+          <input type="number" id="moon_sec" min="0" max="59" step="1" placeholder="&quot;" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Box 2: Calculation date + Compute button -->
+  <div class="form" id="manualBox2">
+    <div class="row">
+      <div class="field">
+        <label id="lblCalcDate">கணிப்புக்கான தேதி</label>
+        <input type="datetime-local" id="caldate" />
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <button id="btnRun" class="btn secondary" type="button">கணக்கிடு</button>
+      </div>
+    </div>
+  </div>
+</section>
+   <!-- Planet buttons -->
+  <div id="planetButtons"></div>
+  <button id="btnAnimate" class="btn">Animate 1–108</button>
+  <div id="blinkControls" class="toolbar">
+  
+  <button id="btnBlinkSeq"   class="btn">தசை→புக்தி→அந்தரம்</button>
+  <button id="btnBlinkDasa"  class="btn">தசை மின்மினிப்பு</button>
+  <button id="btnBlinkPuthi" class="btn">புக்தி மின்மினிப்பு</button>
+  <button id="btnBlinkAnth"  class="btn">அந்தரம் மின்மினிப்பு</button>
+<button id="btnRasiNameSeq" class="btn">ராசி — தசை→புக்தி→அந்தரம்</button>
+
+</div>
+
+
+  
+  
+  <div class="toolbar" id="layoutControls">
+  <button id="btnLayoutFlat" class="btn">3×4 Chart</button>
+ 
+</div>
+
+
+  <!-- Rasi chart -->
+  <div class="south-chart" id="rasiChart"></div>
+
+  <!-- THREE COLUMN DASA TREE -->
+  <section id="dasaPanel" class="card">
+    <div class="dasa-grid">
+      <div>
+        <h4 id="colDasaTitle">தசை</h4>
+        <ul id="colDasa" class="list"></ul>
+      </div>
+      <div>
+        <h4 id="colPuthiTitle">புக்தி</h4>
+        <ul id="colPuthi" class="list"></ul>
+      </div>
+      <div>
+        <h4 id="colAnthTitle">அந்தரம்</h4>
+        <ul id="colAnth" class="list"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Current splits (ALWAYS shows 3; just highlights what you click in tree) -->
+  <section id="currentSplits" class="splits"></section>
+
+
+</div>
+
+<script>
+/* ===== Language / Theme ===== */
+let LANG='ta';
+const LABELS={
+  ta:{dobApi:'பிறந்த தேதி',tobApi:'பிறந்த நேரம்',place:'பிறந்த இடம்',calc:'API மூலம் கணக்கிடு',dob:'பிறந்த தேதி',calcDate:'கணிப்புக்கான தேதி',lagna:'லக்னம் Degree (° \' ")',moon:'சந்திரன் Degree (° \' ")',run:'கணக்கிடு',animStart:'1–108 பாதங்கள் இயக்கம்',animStop:'நிறுத்து',tbl:{planet:'கிரகம்',deg:'அளவு (° \' ")',nak:'நட்சத்திரம் - பாதம்',rasi:'ராசி',rasiLord:'ராசி அதிபதி',nakLord:'நட்சத்திர அதிபதி'},summary:{dasa:'தசை',puthi:'புக்தி',anth:'அந்தரம்'},pada:'பாதம்'},
+  en:{dobApi:'Date of Birth',tobApi:'Time of Birth',place:'Place of Birth',calc:'Calculate via API',dob:'Date of Birth',calcDate:'Calculation Date',lagna:'Lagna Degree (° \' ")',moon:'Moon Degree (° \' ")',run:'Compute',animStart:'Animate 1–108',animStop:'Stop',tbl:{planet:'Planet',deg:'Degrees (° \' ")',nak:'Nakshatra - Pada',rasi:'Rasi',rasiLord:'Rasi Owner',nakLord:'Nakshatra Owner'},summary:{dasa:'Dasa',puthi:'Bhukti',anth:'Antara'},pada:'Pada'}
+};
+
+/* ===== Canonical planets (internal keys) + display names ===== */
+const PLANET_KEYS=['ketu','venus','sun','moon','mars','rahu','jupiter','saturn','mercury'];
+const DASA_YEARS={ketu:7,venus:20,sun:6,moon:10,mars:7,rahu:18,jupiter:16,saturn:19,mercury:17};
+const PLANET_NAME={
+  ta:{asc:'லக்னம்',sun:'சூரியன்',moon:'சந்திரன்',mars:'செவ்வாய்',mercury:'புதன்',jupiter:'குரு',venus:'சுக்ரன்',saturn:'சனி',rahu:'ராகு',ketu:'கேது'},
+  en:{asc:'Ascendant',sun:'Sun',moon:'Moon',mars:'Mars',mercury:'Mercury',jupiter:'Jupiter',venus:'Venus',saturn:'Saturn',rahu:'Rahu',ketu:'Ketu'}
+};
+const API_TO_KEY={Sun:'sun',Moon:'moon',Mars:'mars',Mercury:'mercury',Jupiter:'jupiter',Venus:'venus',Saturn:'saturn',Rahu:'rahu',Ketu:'ketu',Ascendant:'asc'};
+
+/* ===== Nakshatras (canonical) ===== */
+const NAKS=[
+ {id:'ashwini',     lord:'ketu',    name:{ta:'அஸ்வினி',      en:'Ashwini'}},
+ {id:'bharani',     lord:'venus',   name:{ta:'பரணி',         en:'Bharani'}},
+ {id:'krittika',    lord:'sun',     name:{ta:'கிருத்திகை',    en:'Krittika'}},
+ {id:'rohini',      lord:'moon',    name:{ta:'ரோஹிணி',       en:'Rohini'}},
+ {id:'mrigashirsha',lord:'mars',    name:{ta:'மிருகசீரிடம்',  en:'Mrigashirsha'}},
+ {id:'ardra',       lord:'rahu',    name:{ta:'திருவாதிரை',    en:'Ardra'}},
+ {id:'punarvasu',   lord:'jupiter', name:{ta:'புனர்பூசம்',    en:'Punarvasu'}},
+ {id:'pushya',      lord:'saturn',  name:{ta:'பூசம்',         en:'Pushya'}},
+ {id:'ashlesha',    lord:'mercury', name:{ta:'ஆயில்யம்',      en:'Ashlesha'}},
+ {id:'magha',       lord:'ketu',    name:{ta:'மகம்',          en:'Magha'}},
+ {id:'purva-phalguni', lord:'venus',name:{ta:'பூரம்',         en:'Purva Phalguni'}},
+ {id:'uttara-phalguni',lord:'sun',  name:{ta:'உத்திரம்',      en:'Uttara Phalguni'}},
+ {id:'hasta',       lord:'moon',    name:{ta:'ஹஸ்தம்',        en:'Hasta'}},
+ {id:'chitra',      lord:'mars',    name:{ta:'சித்திரை',      en:'Chitra'}},
+ {id:'swati',       lord:'rahu',    name:{ta:'சுவாதி',        en:'Swati'}},
+ {id:'vishakha',    lord:'jupiter', name:{ta:'விசாகம்',       en:'Vishakha'}},
+ {id:'anuradha',    lord:'saturn',  name:{ta:'அனுஷம்',        en:'Anuradha'}},
+ {id:'jyeshtha',    lord:'mercury', name:{ta:'கேட்டை',        en:'Jyeshtha'}},
+ {id:'mula',        lord:'ketu',    name:{ta:'மூலம்',         en:'Mula'}},
+ {id:'purva-ashadha', lord:'venus', name:{ta:'பூராடம்',       en:'Purva Ashadha'}},
+ {id:'uttara-ashadha', lord:'sun',  name:{ta:'உத்திராடம்',    en:'Uttara Ashadha'}},
+ {id:'shravana',    lord:'moon',    name:{ta:'திருவோணம்',     en:'Shravana'}},
+ {id:'dhanishta',   lord:'mars',    name:{ta:'அவிட்டம்',      en:'Dhanishta'}},
+ {id:'shatabhisha', lord:'rahu',    name:{ta:'சதயம்',         en:'Shatabhisha'}},
+ {id:'purva-bhadra',lord:'jupiter', name:{ta:'பூரட்டாதி',      en:'Purva Bhadrapada'}},
+ {id:'uttara-bhadra',lord:'saturn', name:{ta:'உத்திரட்டாதி',  en:'Uttara Bhadrapada'}},
+ {id:'revati',      lord:'mercury', name:{ta:'ரேவதி',         en:'Revati'}}
+];
+const NAK_INDEX_BY_ID = Object.fromEntries(NAKS.map((n,i)=>[n.id,i]));
+const nakLen = 13 + 20/60;
+
+/* ===== Rasi (canonical) ===== */
+const RASIS = [
+  {id:'aries',      code:'r01', name:{ta:'மேஷம்',    en:'Aries'},      lord:'mars'},
+  {id:'taurus',     code:'r02', name:{ta:'ரிஷபம்',   en:'Taurus'},     lord:'venus'},
+  {id:'gemini',     code:'r03', name:{ta:'மிதுனம்',  en:'Gemini'},     lord:'mercury'},
+  {id:'cancer',     code:'r04', name:{ta:'கடகம்',    en:'Cancer'},     lord:'moon'},
+  {id:'leo',        code:'r05', name:{ta:'சிம்மம்',   en:'Leo'},        lord:'sun'},
+  {id:'virgo',      code:'r06', name:{ta:'கன்னி',    en:'Virgo'},      lord:'mercury'},
+  {id:'libra',      code:'r07', name:{ta:'துலாம்',   en:'Libra'},      lord:'venus'},
+  {id:'scorpio',    code:'r08', name:{ta:'விருச்சிகம்',en:'Scorpio'},   lord:'mars'},
+  {id:'sagittarius',code:'r09', name:{ta:'தனுசு',    en:'Sagittarius'},lord:'jupiter'},
+  {id:'capricorn',  code:'r10', name:{ta:'மகரம்',    en:'Capricorn'},  lord:'saturn'},
+  {id:'aquarius',   code:'r11', name:{ta:'கும்பம்',   en:'Aquarius'},   lord:'saturn'},
+  {id:'pisces',     code:'r12', name:{ta:'மீனம்',    en:'Pisces'},     lord:'jupiter'}
+];
+const RASI_IDS = RASIS.map(r=>r.id);
+const RASIS_REVERSED = new Set(['taurus','libra','sagittarius','capricorn','aquarius','pisces']); // keep your reverse-layout rule
+
+/* Each rasi’s 9 lines: [{nakId,pada}, ...] */
+const RASI_GRID = [
+  // Aries
+  [ ['ashwini',1],['ashwini',2],['ashwini',3],['ashwini',4],['bharani',1],['bharani',2],['bharani',3],['bharani',4],['krittika',1] ],
+  // Taurus
+  [ ['krittika',2],['krittika',3],['krittika',4],['rohini',1],['rohini',2],['rohini',3],['rohini',4],['mrigashirsha',1],['mrigashirsha',2] ],
+  // Gemini
+  [ ['mrigashirsha',3],['mrigashirsha',4],['ardra',1],['ardra',2],['ardra',3],['ardra',4],['punarvasu',1],['punarvasu',2],['punarvasu',3] ],
+  // Cancer
+  [ ['punarvasu',4],['pushya',1],['pushya',2],['pushya',3],['pushya',4],['ashlesha',1],['ashlesha',2],['ashlesha',3],['ashlesha',4] ],
+  // Leo
+  [ ['magha',1],['magha',2],['magha',3],['magha',4],['purva-phalguni',1],['purva-phalguni',2],['purva-phalguni',3],['purva-phalguni',4],['uttara-phalguni',1] ],
+  // Virgo
+  [ ['uttara-phalguni',2],['uttara-phalguni',3],['uttara-phalguni',4],['hasta',1],['hasta',2],['hasta',3],['hasta',4],['chitra',1],['chitra',2] ],
+  // Libra
+  [ ['chitra',3],['chitra',4],['swati',1],['swati',2],['swati',3],['swati',4],['vishakha',1],['vishakha',2],['vishakha',3] ],
+  // Scorpio
+  [ ['vishakha',4],['anuradha',1],['anuradha',2],['anuradha',3],['anuradha',4],['jyeshtha',1],['jyeshtha',2],['jyeshtha',3],['jyeshtha',4] ],
+  // Sagittarius
+  [ ['mula',1],['mula',2],['mula',3],['mula',4],['purva-ashadha',1],['purva-ashadha',2],['purva-ashadha',3],['purva-ashadha',4],['uttara-ashadha',1] ],
+  // Capricorn
+  [ ['uttara-ashadha',2],['uttara-ashadha',3],['uttara-ashadha',4],['shravana',1],['shravana',2],['shravana',3],['shravana',4],['dhanishta',1],['dhanishta',2] ],
+  // Aquarius
+  [ ['dhanishta',3],['dhanishta',4],['shatabhisha',1],['shatabhisha',2],['shatabhisha',3],['shatabhisha',4],['purva-bhadra',1],['purva-bhadra',2],['purva-bhadra',3] ],
+  // Pisces
+  [ ['purva-bhadra',4],['uttara-bhadra',1],['uttara-bhadra',2],['uttara-bhadra',3],['uttara-bhadra',4],['revati',1],['revati',2],['revati',3],['revati',4] ]
+];
+/* --- Own houses + Moolathirikonam --- */
+const PLANET_OWNERSHIP = {
+  sun:     { homes:['leo'],                  moola:'leo' },
+  moon:    { homes:['cancer'],               moola:'cancer' },
+  mars:    { homes:['aries','scorpio'],      moola:'aries' },
+  mercury: { homes:['gemini','virgo'],       moola:'virgo' },
+  jupiter: { homes:['sagittarius','pisces'], moola:'sagittarius' },
+  venus:   { homes:['taurus','libra'],       moola:'libra' },
+  saturn:  { homes:['capricorn','aquarius'], moola:'aquarius' },
+  rahu:    { homes:[], moola:null }, ketu:   { homes:[], moola:null }
+};
+/* --- Layout / reverse toggles --- */
+let FLAT_LAYOUT = false;
+
+// Row1: Aries, Leo, Sagittarius
+// Row2: Taurus, Virgo, Capricorn
+// Row3: Gemini, Libra, Aquarius
+// Row4: Cancer, Scorpio, Pisces
+const FLAT_ORDER_IDX = [0, 4, 8,   1, 5, 9,   2, 6, 10,   3, 7, 11]; 
+
+/* New 4×3 left→right mode */
+let ROW4_LAYOUT = false;
+
+/* Aries→Pisces in normal order (0..11) */
+const ORDER_ROW4 = [0,1,2,3, 4,5,6,7, 8,9,10,11];
+
+
+function isMobileView(){ return window.matchMedia('(max-width:900px)').matches; }
+
+function boxForSignId(signId){
+  const idx = RASIS.findIndex(r=>r.id===signId);
+  return idx<0 ? null : document.querySelector(`.box.${RASIS[idx].code}`);
+}
+function clearOwnerRasiHighlights(){
+  document.querySelectorAll('.owner-rasi-dasa,.owner-rasi-puthi,.owner-rasi-anth')
+    .forEach(b=>b.classList.remove('owner-rasi-dasa','owner-rasi-puthi','owner-rasi-anth'));
+}
+function highlightWholeRasi(signId, cls){
+  const box = boxForSignId(signId);
+  if (box) box.classList.add(cls);
+}
+
+/* Use sign-lord of where Rahu/Ketu sit (needs API result). Else skip. */
+function effectiveOwnerFor(lordKey){
+  if(lordKey==='rahu' || lordKey==='ketu'){
+    const node = savedPlanetsForChart?.[lordKey==='rahu'?'Rahu':'Ketu'];
+    if(node && typeof node.fullDegree==='number'){
+      const deg=((node.fullDegree%360)+360)%360, sIdx=Math.floor(deg/30);
+      return RASIS[sIdx].lord; // e.g., 'mars'
+    }
+    return null;
+  }
+  return lordKey;
+}
+
+/* Choose which of the two homes to highlight based on pada (1–2 => moola, 3–4 => the other).
+   Sun/Moon: always their sole home. */
+function chooseSignByPada(ownerKey, padaNum){
+  const info = PLANET_OWNERSHIP[ownerKey];
+  if(!info) return null;
+  if(ownerKey==='sun' || ownerKey==='moon') return info.homes[0];
+  if(info.homes.length===1) return info.homes[0];
+  const other = info.homes.find(h=>h!==info.moola);
+  return (padaNum<=2 ? info.moola : other);
+}
+
+/* mode: 'dasa' | 'puthi' | 'anth' ; feed the CURRENT highlighted nakshatra-id + its pada */
+function highlightOwnerRasiForPeriod(mode, nakId, padaNum){
+  if(!nakId || !padaNum) return;
+  const nk = NAKS[NAK_INDEX_BY_ID[nakId]];
+  if(!nk) return;
+  const rawOwner = nk.lord;                                // owner of highlighted nakshatra
+  const owner    = effectiveOwnerFor(rawOwner) || rawOwner;// proxy for Rahu/Ketu if possible
+  const signId   = chooseSignByPada(owner, padaNum);       // decide which home
+  if(!signId) return;
+  const cls = (mode==='dasa') ? 'owner-rasi-dasa' :
+              (mode==='puthi')? 'owner-rasi-puthi' : 'owner-rasi-anth';
+  highlightWholeRasi(signId, cls);
+}
+
+
+/* ===== UI helpers ===== */
+function namePlanet(key){ return PLANET_NAME[LANG][key]; }
+function nameNakByIdx(idx){ return NAKS[idx]?.name?.[LANG] || ''; }
+function nameNakById(id){ const idx=NAK_INDEX_BY_ID[id]; return nameNakByIdx(idx); }
+function nameRasiByIdx(idx){ return RASIS[idx]?.name?.[LANG] || ''; }
+
+function formatDateUI(d){ const dt=new Date(d); if(isNaN(dt)) return ''; const dd=String(dt.getDate()).padStart(2,'0'); const mm=String(dt.getMonth()+1).padStart(2,'0'); const yy=dt.getFullYear(); return `${dd}-${mm}-${yy}`; }
+function decToDMS(dec){ const deg=Math.floor(dec); const minFloat=(dec-deg)*60; const min=Math.floor(minFloat); const sec=Math.round((minFloat-min)*60); return {deg,min,sec}; }
+function getGlobalPada(decDeg){ const padaSizeDeg=360/108; return Math.floor(((decDeg%360)+360)%360 / padaSizeDeg)+1; }
+// Safe "first 2 letters" per language (handles Tamil graphemes)
+function firstNGraphemes(str, n){
+  try{
+    const seg = new Intl.Segmenter(LANG, { granularity: 'grapheme' });
+    const it = seg.segment(str);
+    let out = '', count = 0;
+    for (const g of it){ out += g.segment; if(++count >= n) break; }
+    return out;
+  }catch(e){
+    // fallback
+    return [...str].slice(0,n).join('');
+  }
+}
+
+// English fixed 2-letter codes; Tamil uses first 2 graphemes
+const PLANET_ABBR = {
+  en: {
+    asc:'As', sun:'Su', moon:'Mo', mars:'Ma', mercury:'Me',
+    jupiter:'Ju', venus:'Ve', saturn:'Sa', rahu:'Ra', ketu:'Ke'
+  }
+};
+
+function planetShort2FromApiKey(apiKey){
+  const key = (API_TO_KEY[apiKey] || apiKey).toLowerCase(); // 'sun'|'moon'...
+  const full = PLANET_NAME[LANG][key] || apiKey;            // localized full name
+  if (LANG === 'en') return PLANET_ABBR.en[key] || firstNGraphemes(full,2);
+  // ta (and any other): just first 2 grapheme clusters
+  return firstNGraphemes(full, 2);
+}
+
+/* ===== Theme / Language toggles ===== */
+function applyLang(){
+  const L=LABELS[LANG];
+  lblDobApi.textContent=L.dobApi; 
+  lblTobApi.textContent=L.tobApi; 
+  lblPlace.textContent=L.place; 
+  btnApi.textContent=L.calc;
+  lblDob.textContent=L.dob; 
+  lblCalcDate.textContent=L.calcDate; 
+  lblLagna.textContent=L.lagna; 
+  lblMoon.textContent=L.moon; 
+  btnRun.textContent=L.run;
+  thPlanet.textContent=L.tbl.planet; 
+  thDeg.textContent=L.tbl.deg; 
+  thNak.textContent=L.tbl.nak; 
+  thRasi.textContent=L.tbl.rasi; 
+  thRasiLord.textContent=L.tbl.rasiLord; 
+  thNakLord.textContent=L.tbl.nakLord;
+  colDasaTitle.textContent=L.summary.dasa; 
+  colPuthiTitle.textContent=L.summary.puthi; 
+  colAnthTitle.textContent=L.summary.anth;
+  if (window.btnAnimate) btnAnimate.textContent = (anim.running ? LABELS[LANG].animStop : LABELS[LANG].animStart);
+
+  const blLabel = document.getElementById('blinkLabel');
+const bSeq = document.getElementById('btnBlinkSeq');
+const bD   = document.getElementById('btnBlinkDasa');
+const bP   = document.getElementById('btnBlinkPuthi');
+const bA   = document.getElementById('btnBlinkAnth');
+
+if (blLabel && bSeq && bD && bP && bA){
+  if (LANG === 'ta'){
+    
+    bSeq.textContent = "தசை→புக்தி→அந்தரம்";
+    bD.textContent   = "தசை மின்மினிப்பு";
+    bP.textContent   = "புக்தி மின்மினிப்பு";
+    bA.textContent   = "அந்தரம் மின்மினிப்பு";
+  } else {
+    
+    bSeq.textContent = "Dasa→Puthi→Anthra";
+    bD.textContent   = "Blink Dasa";
+    bP.textContent   = "Blink Puthi";
+    bA.textContent   = "Blink Anthra";
+  }
+}
+
+
+  // rebuild UI texts everywhere
+  drawChartGrid();
+  if(savedPlanetsForChart){ 
+    placePlanetsOnChart(savedPlanetsForChart); 
+    buildPlanetsTable(savedPlanetsForChart); 
+  }
+  renderAll();
+  // ...end of renderAll()
+reapplyVathai();
+
+}
+
+
+langToggle.addEventListener('click',()=>{ LANG=(LANG==='ta'?'en':'ta'); applyLang(); ensurePlanetButtons(); });
+themeToggle.addEventListener('click',()=>{ document.body.classList.toggle('dark'); });
+
+/* ===== Place suggestions (same) ===== */
+const LOCATIONIQ_TOKEN='pk.c1e392aaa38cf30cc350555c040477b5';
+const placeInput=document.getElementById('placeInput');
+const suggestionsBox=document.getElementById('suggestions-box');
+let selectedLat=null, selectedLon=null, activeIndex=-1;
+function debounce(fn,delay){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),delay); }; }
+async function fetchPlaceSuggestions(q){
+  if(!q||q.length<3) return [];
+  try{
+    const r=await fetch(`https://us1.locationiq.com/v1/autocomplete.php?key=${LOCATIONIQ_TOKEN}&q=${encodeURIComponent(q)}&limit=7&format=json`);
+    if(r.ok){ const j=await r.json(); if(Array.isArray(j)) return j.map(x=>({name:x.display_name,lat:+x.lat,lon:+x.lon})); }
+  }catch(e){}
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(q)}&limit=7&addressdetails=0`);
+    if(r.ok){ const j=await r.json(); if(Array.isArray(j)) return j.map(x=>({name:x.display_name,lat:+x.lat,lon:+x.lon})); }
+  }catch(e){}
+  return [];
+}
+function renderSuggestions(items){
+  suggestionsBox.innerHTML=''; activeIndex=-1;
+  if(items.length===0){ suggestionsBox.innerHTML=`<div id="suggestions-empty">No results</div>`; suggestionsBox.style.display='block'; return; }
+  items.forEach((it)=>{
+    const d=document.createElement('div'); d.textContent=it.name;
+    d.addEventListener('mousedown',(ev)=>{ ev.preventDefault(); applySuggestion(it); });
+    suggestionsBox.appendChild(d);
+  });
+  suggestionsBox.style.display='block';
+}
+function applySuggestion(it){ placeInput.value=it.name; selectedLat=it.lat; selectedLon=it.lon; suggestionsBox.style.display='none'; }
+placeInput.addEventListener('input', debounce(async ()=>{ const q=placeInput.value.trim(); if(!q){ suggestionsBox.style.display='none'; selectedLat=selectedLon=null; return; } renderSuggestions(await fetchPlaceSuggestions(q)); },250));
+placeInput.addEventListener('keydown', (e)=>{
+  const items=[...suggestionsBox.querySelectorAll('div')].filter(x=>x.id!=='suggestions-empty');
+  if(!items.length) return;
+  if(e.key==='ArrowDown'){ e.preventDefault(); activeIndex=(activeIndex+1)%items.length; updateActive(items); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); activeIndex=(activeIndex-1+items.length)%items.length; updateActive(items); }
+  else if(e.key==='Enter'){ e.preventDefault(); if(activeIndex>=0){ items[activeIndex].dispatchEvent(new Event('mousedown')); } }
+});
+function updateActive(items){ items.forEach(x=>x.classList.remove('active')); if(activeIndex>=0) items[activeIndex].classList.add('active'); }
+document.addEventListener('click', e=>{ if(e.target!==placeInput && !suggestionsBox.contains(e.target)) suggestionsBox.style.display='none'; });
+
+/* ===== API ===== */
+const FREE_ASTRO_API_KEY='PZVUMczZA7ahUT0ImRHbB4tHrB16Cyd69iU54vmK';
+let apiDataFetched=false, savedPlanetsForChart=null, planetDegrees={};
+btnApi.addEventListener('click', async ()=>{
+  if(!selectedLat||!selectedLon){ alert(LANG==='ta'?'தயவுசெய்து இடம் தெரிவுசெய்யவும்!':'Please select a place!'); return; }
+  const dob=dob_api.value, tob=tob_api.value;
+  if(!dob||!tob){ alert(LANG==='ta'?'தேதி/நேரம் பூர்த்தி செய்யவும்!':'Please fill date/time!'); return; }
+  const [year,month,day]=dob.split('-').map(Number); const [hours,minutes]=tob.split(':').map(Number);
+  const payload={year,month,date:day,hours,minutes,seconds:0,latitude:selectedLat,longitude:selectedLon,timezone:5.5,settings:{observation_point:"geocentric",ayanamsha:"lahiri",language:"en"}};
+  try{
+    const res=await fetch('https://json.freeastrologyapi.com/planets/extended',{method:'POST',headers:{"Content-Type":"application/json","x-api-key":FREE_ASTRO_API_KEY},body:JSON.stringify(payload)});
+    if(!res.ok) throw new Error(`API error ${res.status}`);
+    const data=await res.json();
+    if(!data.output){ apiResult.textContent="API response missing planet data."; return; }
+    const planets=data.output; savedPlanetsForChart=planets;
+    // Save the latest result (planets + a few inputs) to IndexedDB
+idbPlanets.put('latest', {
+  planets,                                   // the API object you already have
+  inputs: {
+    dob: dob_api.value,
+    tob: tob_api.value,
+    place: placeInput.value,
+    lat: selectedLat, lon: selectedLon
+  }
+}).catch(console.error);
+
+
+    // Fill Moon & Lagna (manual form)
+    const m=decToDMS(planets.Moon.fullDegree); moon_deg.value=m.deg; moon_min.value=m.min; moon_sec.value=m.sec;
+    const a=decToDMS(planets.Ascendant.fullDegree); lagna_deg.value=a.deg; lagna_min.value=a.min; lagna_sec.value=a.sec;
+    dob_.value = dob;
+
+    // Keep only allowed planets (store degrees; names show per-language)
+    const allow = ['Ascendant','Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Rahu','Ketu'];
+    planetDegrees={};
+    Object.keys(planets).forEach(k=>{ if(allow.includes(k) && typeof planets[k].fullDegree==='number') planetDegrees[k]=planets[k].fullDegree; });
+
+    ensurePlanetButtons();
+    drawChartGrid();
+    placePlanetsOnChart(savedPlanetsForChart);
+    buildPlanetsTable(planets); // also reveals the card
+
+    apiResult.textContent=(LANG==='ta'?'API planet data பெறப்பட்டது! சந்திரன்/லக்னம் auto-filled.':'API planet data fetched! Moon/Lagna auto-filled.');
+    apiDataFetched=true;
+
+    run();
+  }catch(e){ apiResult.textContent='Error: '+e.message; }
+});
+/* ===== Pada animation (1..108) ===== */
+const anim = {
+  running:false,
+  timer:null,
+  idx:1,
+  speedMs: 220 // adjust speed here (milliseconds per step)
+};
+
+
+function animClearCell(){
+  document.querySelectorAll('.anim-cell').forEach(el=>{
+    el.classList.remove('anim-cell','anim-band-1','anim-band-2','anim-band-3');
+  });
+}
+
+function animStep(){
+  if (!padaDomList || padaDomList.length < 109) return; // wait until grid exists
+  animClearCell();
+  const el = padaDomList[anim.idx];
+  if (el){
+    // decide range/band
+    const band = (anim.idx <= 36) ? 1 : (anim.idx <= 72 ? 2 : 3);
+    el.classList.add('anim-cell', `anim-band-${band}`);
+    el.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'});
+  }
+  anim.idx = (anim.idx % 108) + 1; // 1..108 loop
+}
+
+
+
+function startPadaAnimation(){
+  if (anim.running) return;
+  anim.running = true;
+  anim.idx = 1;
+  animStep();
+  anim.timer = setInterval(animStep, anim.speedMs);
+  btnAnimate.classList.add('active');
+  btnAnimate.textContent = LABELS[LANG].animStop;
+}
+
+function stopPadaAnimation(){
+  anim.running = false;
+  if (anim.timer){ clearInterval(anim.timer); anim.timer = null; }
+  animClearCell();
+  btnAnimate.classList.remove('active');
+  btnAnimate.textContent = LABELS[LANG].animStart;
+}
+
+/* Button wiring */
+btnAnimate?.addEventListener('click', ()=>{
+  if (anim.running) stopPadaAnimation();
+  else startPadaAnimation();
+});
+
+/* If the grid re-renders, keep things safe */
+document.addEventListener('visibilitychange', ()=>{ if (document.hidden) stopPadaAnimation(); });
+
+/* Optional: stop animation whenever you rebuild the grid */
+const _drawChartGrid = drawChartGrid;
+drawChartGrid = function(){
+  // stop gracefully so new cells don’t lose the class mapping
+  if (anim.running) stopPadaAnimation();
+  _drawChartGrid();
+};
+
+
+/* ===== Planet buttons ===== */
+function displayPlanetLabelFromApiKey(apiKey){
+  const key = API_TO_KEY[apiKey] || apiKey.toLowerCase();
+  return PLANET_NAME[LANG][key] || apiKey;
+}
+function clearPlanetButtonActive(){
+  const c = document.getElementById('planetButtons');
+  if(!c) return;
+  c.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+}
+function setActivePlanetButton(canonKey){           // canonKey: 'sun','moon',...
+  const c = document.getElementById('planetButtons');
+  if(!c) return;
+  const btn = c.querySelector(`button[data-planet-key="${canonKey}"]`);
+  if(btn){
+    clearPlanetButtonActive();
+    btn.classList.add('active');
+  }
+}
+ 
+/* Active state for planet buttons */
+let planetBtnActiveKey = null;
+function setActivePlanetButton(key){
+  const wrap = document.getElementById('planetButtons');
+  if(!wrap) return;
+  wrap.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+  if(!key){ planetBtnActiveKey = null; return; }
+  const btn = wrap.querySelector(`button[data-key="${key}"]`);
+  if(btn){ btn.classList.add('active'); planetBtnActiveKey = key; }
+}
+
+function ensurePlanetButtons(){
+  const c = planetButtons; 
+  c.innerHTML='';
+  if(!planetDegrees || Object.keys(planetDegrees).length===0){ 
+    c.style.display='none'; 
+    return; 
+  }
+  c.style.display='flex';
+
+  Object.keys(planetDegrees).forEach(apiKey=>{
+    const key = (API_TO_KEY[apiKey] || apiKey.toLowerCase()); // canonical key: 'sun','moon',...
+    const b = document.createElement('button');
+    b.className = 'btn planet-btn';
+    b.dataset.key = key;
+    b.textContent = displayPlanetLabelFromApiKey(apiKey); // localized label (Su/Mo/…)
+    b.onclick = ()=>{
+      // 1) show active style
+      setActivePlanetButton(key);
+      // 2) keep your existing behavior: push that planet’s degree into Moon inputs
+      const deg = planetDegrees[apiKey];
+      const d = Math.floor(deg);
+      const mFloat = (deg - d) * 60;
+      const m = Math.floor(mFloat);
+      const s = Math.round((mFloat - m) * 60);
+      moon_deg.value = d; moon_min.value = m; moon_sec.value = s;
+      flashCell(getGlobalPada(deg));
+      run();
+    };
+    c.appendChild(b);
+  });
+
+  // default selection = Moon (if present)
+  if ('Moon' in planetDegrees) setActivePlanetButton('moon');
+}
+
+['moon_deg','moon_min','moon_sec'].forEach(id=>{
+  const el = document.getElementById(id);
+  el?.addEventListener('input', ()=> setActivePlanetButton(null));
+});
+
+function flashCell(idx){ const el=padaDomList[idx]; if(!el) return; el.style.outline='2px solid var(--ring)'; setTimeout(()=>{el.style.outline='none';},800); }
+
+// Group the 9 (nakId,pada) entries by consecutive Nakshatra
+function groupByConsecutiveNak(grid9){
+  const groups = [];
+  let cur = null;
+  for (const [nakId, pada] of grid9){
+    if (!cur || cur.nakId !== nakId){
+      cur = { nakId, items: [] };
+      groups.push(cur);
+    }
+    cur.items.push({ nakId, pada });
+  }
+  return groups; // [{nakId, items:[{nakId,pada}, ...]}, ...]
+}
+
+/* ===== Rasi grid (bilingual, exact matching) ===== */
+let mode="current"; let padaDomList=[];
+function drawChartGrid(){
+  // stop animation safely before rebuilding
+  if (anim && anim.running) stopPadaAnimation();
+
+  rasiChart.innerHTML = '';
+  padaDomList = [];
+
+  // order: Normal (0..11) or 3×4 flat (your FLAT_ORDER_IDX)
+  const order = FLAT_LAYOUT ? FLAT_ORDER_IDX : [...Array(12).keys()];
+
+  // reverse logic OFF on mobile, ON on desktop (unless flat)
+  const reverseEnabledGlobally = !FLAT_LAYOUT && !isMobileView();
+
+  // apply only the flat layout class; make sure any 4×3 class is removed
+  rasiChart.classList.toggle('flat3', FLAT_LAYOUT);
+  rasiChart.classList.remove('row4x3');
+
+  order.forEach((rasiIdx)=>{
+    const rasi   = RASIS[rasiIdx];
+    const visRev = reverseEnabledGlobally && RASIS_REVERSED.has(rasi.id);
+    const grid9  = visRev ? [...RASI_GRID[rasiIdx]].reverse() : RASI_GRID[rasiIdx];
+    const base   = rasiIdx * 9 + 1; // canonical start for this rasi
+
+    const box = document.createElement('div');
+    box.className = `box ${rasi.code}`;
+    box.dataset.rasiIdx = rasiIdx + 1;
+
+    const title = document.createElement('div');
+    title.className = 'rasi-name';
+    title.textContent = rasi.name[LANG];
+    box.appendChild(title);
+
+    for (let j = 0; j < 9; j++){
+      const [nakId, pada] = grid9[j];
+
+      const line = document.createElement('div');
+      line.className = 'line';
+      line.textContent = `${nameNakById(nakId)} - ${LABELS[LANG].pada} ${pada}`;
+      line.dataset.nakId = nakId;
+      line.dataset.pada  = String(pada);
+
+      const gIdx = visRev ? (base + 8 - j) : (base + j);
+      line.dataset.padaIndex = gIdx;
+      padaDomList[gIdx] = line;
+
+      box.appendChild(line);
+    }
+
+    rasiChart.appendChild(box);
+  });
+     applyRasiNumberChips(); 
+  if (mode === 'current') showCurrentDasaPadaHighlight(); // after _draw() in your patched drawChartGrid:
+reapplyVathai();
+
+}
+// Click any pada cell to show Vathai/Vainasigam markers
+document.getElementById('rasiChart')?.addEventListener('click', (ev)=>{
+  const line = ev.target.closest('.line');
+  if(!line || !line.dataset || !line.dataset.padaIndex) return;
+
+  // stop running sequences so your markers are visible
+  try{ if(typeof stopRasiNameSeq==='function') stopRasiNameSeq(); }catch(e){}
+  try{ if(typeof stopBlink==='function')       stopBlink();       }catch(e){}
+
+  const baseIdx = parseInt(line.dataset.padaIndex, 10);
+  if(!isNaN(baseIdx) && baseIdx>=1 && baseIdx<=108){
+    applyVathaiForBaseIndex(baseIdx, true);
+  }
+});
+
+/* ===== Green highlights (exact by nakId + pada) ===== */
+function clearGreenHighlights(){
+  document.querySelectorAll('.highlight-pada-dasa,.highlight-pada-puthi,.highlight-pada-anthara')
+    .forEach(e=>e.classList.remove('highlight-pada-dasa','highlight-pada-puthi','highlight-pada-anthara'));
+}
+function findPadaIndexById(nakId,padaNum){
+  const want = String(padaNum);
+  for(let i=1;i<=108;i++){
+    const el = padaDomList[i];
+    if(!el) continue;
+    if(el.dataset && el.dataset.nakId === nakId && el.dataset.pada === want) return i;
+  }
+  return -1;
+}
+function showCurrentDasaPadaHighlight(){
+  clearGreenHighlights();
+  if(!vimData||!vimCurrentPath) return;
+
+  const now=caldate.value? new Date(caldate.value): new Date();
+  const md=vimData[vimCurrentPath.dasa], pt=md?.puthis[vimCurrentPath.puthi], at=pt?.antharas[vimCurrentPath.anth];
+  const mdPada=getCurrentPada(md,now), ptPada=getCurrentPada(pt,now), atPada=getCurrentPada(at,now);
+
+  // Owner rasi title (respects the guard)
+  clearOwnerRasiHighlights();
+  if(mdPada?.nakId) highlightOwnerRasiForPeriod('dasa',  mdPada.nakId, mdPada.pada);
+  if(ptPada?.nakId) highlightOwnerRasiForPeriod('puthi', ptPada.nakId, ptPada.pada);
+  if(atPada?.nakId) highlightOwnerRasiForPeriod('anth',  atPada.nakId, atPada.pada);
+
+  // ✅ Only add the fixed green pada rows when Rasi-name sequence is NOT active
+  if (!RASI_NAME_SEQ_ACTIVE){
+    const idxD=(mdPada.pada? findPadaIndexById(mdPada.nakId, mdPada.pada): -1);
+    const idxP=(ptPada.pada? findPadaIndexById(ptPada.nakId, ptPada.pada): -1);
+    const idxA=(atPada.pada? findPadaIndexById(atPada.nakId, atPada.pada): -1);
+    if (idxD>0) padaDomList[idxD].classList.add('highlight-pada-dasa');
+    if (idxP>0) padaDomList[idxP].classList.add('highlight-pada-puthi');
+    if (idxA>0) padaDomList[idxA].classList.add('highlight-pada-anthara');
+  }
+}
+
+/* ===== Lagna numbered bands ===== */
+function clearLagnaNumberBands(){
+  for(let i=1;i<=12;i++){
+    document.querySelectorAll('.highlight-pada-'+i)
+      .forEach(e=>e.classList.remove('highlight-pada-'+i));
+  }
+  // remove any old “start” styles
+  document.querySelectorAll('.lagna-start')
+    .forEach(e=>e.classList.remove('lagna-start'));
+
+  // remove the new per-start markers (number chip outline)
+  document.querySelectorAll('.lagna-edge')
+    .forEach(e=>e.classList.remove('lagna-edge','lagna-start-b1','lagna-start-b2','lagna-start-b3','lagna-start-b4'));
+}
+
+let LAST_LAGNA_PADA = null;   // <-- put this once near your other globals
+
+function highlightLagnaNumberedBands(startPada){
+  LAST_LAGNA_PADA = startPada;           // remember for re-applying
+  clearLagnaNumberBands();
+
+  // ---- band fills (unchanged logic) ----
+  const add=(off,cls)=>{
+    const idx=((startPada-1+off)%108)+1;
+    if(padaDomList[idx]) padaDomList[idx].classList.add(cls);
+  };
+  for(let o=0;o<=8;o++)    add(o,'highlight-pada-1');
+  for(let o=9;o<=17;o++)   add(o,'highlight-pada-2');
+  for(let o=18;o<=26;o++)  add(o,'highlight-pada-3');
+  for(let o=27;o<=35;o++)  add(o,'highlight-pada-4');
+  for(let o=36;o<=44;o++)  add(o,'highlight-pada-5');
+  for(let o=45;o<=53;o++)  add(o,'highlight-pada-6');
+  for(let o=54;o<=62;o++)  add(o,'highlight-pada-7');
+  for(let o=63;o<=71;o++)  add(o,'highlight-pada-8');
+  for(let o=72;o<=80;o++)  add(o,'highlight-pada-9');
+  for(let o=81;o<=89;o++)  add(o,'highlight-pada-10');
+  for(let o=90;o<=98;o++)  add(o,'highlight-pada-11');
+  for(let o=99;o<=107;o++) add(o,'highlight-pada-12');
+
+  // ---- outline ONLY the number chip of each bhava’s starting pada ----
+  for(let h=0; h<12; h++){
+    const idx = ((startPada-1) + h*9) % 108 + 1;   // bhava starts every 9 padas
+    const el  = padaDomList[idx];
+    if(!el) continue;
+    el.classList.remove('lagna-start');            // remove old full-outline if any
+    const band = (h % 4) + 1;                      // 1..4 band coloring
+    el.classList.add('lagna-edge', `lagna-start-b${band}`);
+  }
+
+  // ---- add numbered chips to each rasi title (1..12) with band-colored outline ----
+  const startSignIdx = Math.floor((startPada-1) / 9); // 0..11 (Aries..Pisces)
+  document.querySelectorAll('#rasiChart .box').forEach(box=>{
+    const sIdx0 = (parseInt(box.dataset.rasiIdx,10) || 1) - 1; // 0..11
+    const rel   = (sIdx0 - startSignIdx + 12) % 12;            // 0..11
+    const house = rel + 1;                                     // 1..12
+    const band  = ((house-1) % 4) + 1;                         // 1..4
+    const title = box.querySelector('.rasi-name');
+    if(!title) return;
+    const label = RASIS[sIdx0].name[LANG];
+    title.innerHTML = `<span class="rasi-num b${band}">${house}</span>${label}`;
+  });
+}
+
+function throttle(fn, wait){
+  let t = 0;
+  return function(){
+    const now = Date.now();
+    if (now - t >= wait){ t = now; fn(); }
+  };
+}
+function reapplyLagnaBands(){
+  if (LAST_LAGNA_PADA) highlightLagnaNumberedBands(LAST_LAGNA_PADA);
+}
+
+// re-apply on scroll (mobile address-bar show/hide often fires resize too)
+window.addEventListener('scroll', throttle(reapplyLagnaBands, 120), { passive:true });
+
+// you already rebuild on resize; just ensure lagna bands are re-applied after that
+window.addEventListener('resize', throttle(reapplyLagnaBands, 120));
+
+
+/* ===== Vimsottari core ===== */
+function addYears(date,years){ let d=new Date(date), y=Math.floor(years), m=(years-y)*12; d.setFullYear(d.getFullYear()+y); d.setMonth(d.getMonth()+Math.floor(m)); d.setDate(d.getDate()+Math.round((m-Math.floor(m))*30)); return d; }
+function cycle9(start){ return Array(9).fill(0).map((_,j)=>(start+j)%27); }
+
+function getDasaLordsAndNames(moon){
+  const nakIdx=Math.floor(moon/nakLen);
+  const startLord=NAKS[nakIdx].lord; // canonical key
+  const startIdx=PLANET_KEYS.indexOf(startLord);
+  const dasaLords=PLANET_KEYS.slice(startIdx).concat(PLANET_KEYS.slice(0,startIdx)); // canonical keys
+  const dasaNakIdxs=Array(9).fill(0).map((_,j)=>(nakIdx+j)%27);
+  return {dasaLords,dasaNakIdxs,nakIdx};
+}
+
+function dasaTree(moon, dob, now){
+  const {dasaLords,dasaNakIdxs,nakIdx}=getDasaLordsAndNames(moon);
+
+  // starting from balance
+  const offsetDeg=moon - nakIdx*nakLen; 
+  const balance=1 - (offsetDeg/nakLen);
+
+  let mdStarts=[], cursor=addYears(dob, -(DASA_YEARS[dasaLords[0]]*(1-balance)));
+  for(let i=0;i<9;i++){ 
+    mdStarts[i]=new Date(cursor); 
+    cursor=addYears(cursor, DASA_YEARS[dasaLords[i]]); 
+  }
+
+  const arr=dasaLords.map((lordKey,i)=>({
+    index:i, 
+    lordKey, 
+    nakIdx:dasaNakIdxs[i],
+    start:mdStarts[i], 
+    end:mdStarts[i+1]||cursor,
+    current: now>=mdStarts[i] && now<(mdStarts[i+1]||cursor),
+    puthis:[]
+  }));
+
+  arr.forEach((md)=>{
+    /* -------------------------
+       BHUKTI (starts from Dasha lord for lords, and Dasha nak + 9 for nakshatras)
+    ------------------------- */
+    const pStartNakIdx=(md.nakIdx+9)%27;                 // nakshatra sequence for bhukti
+    const pNakIdxs=cycle9(pStartNakIdx);                 // 9 nakshatras
+    const pStartLordIdx=PLANET_KEYS.indexOf(md.lordKey); // rotate lords from Dasha lord
+    const pLords=PLANET_KEYS.slice(pStartLordIdx).concat(PLANET_KEYS.slice(0,pStartLordIdx));
+
+    const mdYears=(md.end-md.start)/(1000*60*60*24*365.2425);
+    let pStarts=[], c=new Date(md.start);
+    for(let j=0;j<9;j++){ 
+      pStarts[j]=new Date(c); 
+      const part=mdYears*(DASA_YEARS[pLords[j]]/120); 
+      c=addYears(c, part); 
+    }
+
+    md.puthis=pLords.map((pl,pi)=>({
+      index:pi, 
+      lordKey:pl, 
+      nakIdx:pNakIdxs[pi],
+      start:pStarts[pi], 
+      end:pStarts[pi+1]||c,
+      current: now>=pStarts[pi] && now<(pStarts[pi+1]||c),
+      antharas:[]
+    }));
+
+    /* -------------------------
+       ANTHARA (fix):
+       - Lords start from Bhukti lord
+       - Nakshatra sequence starts from (Bhukti nak + 9)
+    ------------------------- */
+    md.puthis.forEach(pt=>{
+      const aStartNakIdx=(pt.nakIdx+9)%27;                // nakshatra sequence for antara
+      const aNakIdxs=cycle9(aStartNakIdx);
+
+      const aStartLordIdx=PLANET_KEYS.indexOf(pt.lordKey);// rotate lords from Bhukti lord
+      const aLords=PLANET_KEYS.slice(aStartLordIdx).concat(PLANET_KEYS.slice(0,aStartLordIdx));
+
+      const ptYears=(pt.end-pt.start)/(1000*60*60*24*365.2425);
+      let aStarts=[], cc=new Date(pt.start);
+      for(let k=0;k<9;k++){ 
+        aStarts[k]=new Date(cc); 
+        const part=ptYears*(DASA_YEARS[aLords[k]]/120); 
+        cc=addYears(cc, part); 
+      }
+
+      pt.antharas=aLords.map((al,ai)=>({
+        index:ai, 
+        lordKey:al, 
+        nakIdx:aNakIdxs[ai],
+        start:aStarts[ai], 
+        end:aStarts[ai+1]||cc,
+        current: now>=aStarts[ai] && now<(aStarts[ai+1]||cc)
+      }));
+    });
+  });
+
+  return arr;
+}
+
+function currentPadaSplit(period){
+  if(!period) return [];
+  const durYears=(period.end-period.start)/(1000*60*60*24*365.2425);
+  const per=durYears/4; let arr=[], cur=new Date(period.start);
+  for(let i=0;i<4;i++){
+    const to=addYears(cur,per);
+    arr.push({nakIdx:period.nakIdx,pada:i+1,start:new Date(cur),end:to});
+    cur=to;
+  }
+  return arr;
+}
+function findCurrentPath(tree){
+  for(let i=0;i<tree.length;i++){
+    const md=tree[i]; if(md.current){
+      let dI=i,pI=-1,aI=-1;
+      for(let j=0;j<md.puthis.length;j++){
+        const pt=md.puthis[j]; if(pt.current){ pI=j; for(let k=0;k<pt.antharas.length;k++){ if(pt.antharas[k].current){ aI=k; } } }
+      }
+      return { dasa:dI, puthi:pI, anth:aI };
+    }
+  }
+  return {dasa:-1, puthi:-1, anth:-1};
+}
+function getCurrentPada(period,now){
+  if(!period) return {padaIdx:-1,pada:null,from:null,to:null,nakId:null};
+  const total=(period.end-period.start);
+  for(let i=0;i<4;i++){
+    const from=new Date(period.start.getTime()+ (total*i/4));
+    const to=new Date(period.start.getTime()+ (total*(i+1)/4));
+    if(now>=from && now<to){ return {padaIdx:i, pada:i+1, from, to, nakId: NAKS[period.nakIdx].id }; }
+  }
+  return {padaIdx:-1,pada:null,nakId:null};
+}
+function getDasaPercentage(period,now){ if(!period||!period.start||!period.end) return 0; const total=period.end-period.start; const elapsed=now - period.start; return Math.round(Math.min(Math.max(elapsed/total,0),1)*100); }
+
+/* ===== Sticky Summary with inline nav (no Current Splits) ===== */
+function renderSummary(md, mdPada, pt, ptPada, at, atPada){
+  const P = LABELS[LANG].pada;
+
+  function row(mode, title, per, padaObj, colorVar){
+    if(!per) return '';
+    const nk   = padaObj?.nakId ? nameNakById(padaObj.nakId) : '-';
+    const pd   = padaObj?.pada  ? padaObj.pada : '-';
+    const from = padaObj?.from ? formatDateUI(padaObj.from) : '';
+    const to   = padaObj?.to   ? formatDateUI(padaObj.to)   : '';
+    const range = (from && to) ? `<span class="muted">(${from} - ${to})</span>` : '';
+    return `
+      <div class="navline" style="display:flex;align-items:center;gap:8px;margin:6px 0;">
+        <div style="flex:1 1 auto">
+          <b style="color:var(${colorVar})">${title}</b>:
+          ${nk} (${P} ${pd}) ${range}
+        </div>
+        <button class="btn navbtn" data-mode="${mode}" data-dir="-1">◀</button>
+        <button class="btn navbtn" data-mode="${mode}" data-dir="+1">▶</button>
+      </div>
+    `;
+  }
+
+  // Build rows
+  let html =
+    row('dasa',  LABELS[LANG].summary.dasa,  md, mdPada, '--green1') +
+    row('puthi', LABELS[LANG].summary.puthi, pt, ptPada, '--green2') +
+    row('anth',  LABELS[LANG].summary.anth,  at, atPada, '--green3');
+
+  // Calculated date (from the datetime-local input)
+  const calcDate = caldate?.value ? new Date(caldate.value) : new Date();
+  const calcDateStr = formatDateUI(calcDate); // dd-mm-yyyy
+
+  // Reset + date chip
+  const chipLabel = (LANG==='ta') ? 'கணிப்பு தேதி' : 'Calc date';
+  html += `
+    <div style="margin-top:8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+      <button class="btn navbtn" data-reset="now">
+        ${LANG==='ta' ? 'இன்றைய தேதிக்கு மீட்டமை' : 'Reset to Today'}
+      </button>
+      <span class="calc-chip">${chipLabel}: ${calcDateStr}</span>
+    </div>
+  `;
+
+  current.innerHTML = html;
+}
+
+
+/* ===== Current Splits (always 3; % only; bilingual) ===== */
+let activeSplit='';
+function pctOfRange(now,from,to){ const total=to-from; if(total<=0) return 0; const elapsed=now-from; const p=Math.max(0,Math.min(1,elapsed/total)); return Math.round(p*100); }
+/* ===== Current Splits with pada+period nav for all three ===== */
+function renderCurrentSplits(md,pt,at){
+  const now = caldate.value ? new Date(caldate.value) : new Date();
+  currentSplits.innerHTML='';
+  const blocks=[
+    {key:'dasa', title:LABELS[LANG].summary.dasa,  per:md},
+    {key:'puthi',title:LABELS[LANG].summary.puthi, per:pt},
+    {key:'anth', title:LABELS[LANG].summary.anth,  per:at}
+  ];
+  const P = LABELS[LANG].pada;
+
+  blocks.forEach(b=>{
+    if(!b.per) return;
+    const overall=getDasaPercentage(b.per,now);
+    const splits=currentPadaSplit(b.per);
+    const cur=getCurrentPada(b.per,now);
+
+    const card=document.createElement('div');
+    card.className='card split-block';
+    if(activeSplit===b.key){
+      if(b.key==='dasa') card.classList.add('sel-dasa');
+      if(b.key==='puthi') card.classList.add('sel-puthi');
+      if(b.key==='anth') card.classList.add('sel-anth');
+    }
+
+    const t=document.createElement('div');
+    t.className='split-title';
+    t.innerHTML=`${b.title} — <span class="pct">${overall}%</span>`;
+    card.appendChild(t);
+
+    splits.forEach(s=>{
+      const row=document.createElement('div');
+      row.className='pada-row';
+      const nakName = nameNakByIdx(s.nakIdx);
+      const right = (cur.pada===s.pada)
+        ? `<span class="pct">${pctOfRange(now,s.start,s.end)}%</span>`
+        : `<span class="muted">—</span>`;
+      row.innerHTML=`<span>${nakName} — ${P} ${s.pada} <span class="muted">(${formatDateUI(s.start)} - ${formatDateUI(s.end)})</span></span>${right}`;
+      card.appendChild(row);
+    });
+
+    currentSplits.appendChild(card);
+  });
+}
+
+
+/* ===== Three-column Dasa Tree ===== */
+let vimData=null, vimCurrentPath=null;
+let selected={dasa:null, puthi:null, anth:null};
+function indexOfCurrent(arr){ const now=caldate.value? new Date(caldate.value): new Date(); for(let i=0;i<arr.length;i++){ if(now>=arr[i].start && now<arr[i].end) return i; } return 0; }
+function computeSelectionObjects(){
+  if(!vimData) return {md:null,pt:null,at:null};
+  let di = (selected.dasa!=null? selected.dasa : (vimCurrentPath.dasa>=0?vimCurrentPath.dasa:0));
+  let md = vimData[di];
+  let pi = (selected.puthi!=null ? selected.puthi : indexOfCurrent(md.puthis));
+  let pt = md.puthis[pi];
+  let ai = (selected.anth!=null ? selected.anth : indexOfCurrent(pt.antharas));
+  let at = pt.antharas[ai];
+  return {md,pt,at};
+}
+function renderDasaColumn(){
+  const ul = colDasa; ul.innerHTML = '';
+  if(!vimData || !vimData.length) return;
+
+  // current (by date) dasa index
+  const curD = (vimCurrentPath && vimCurrentPath.dasa >= 0)
+                ? vimCurrentPath.dasa
+                : indexOfCurrent(vimData);
+
+  vimData.forEach((md, mi)=>{
+    const li = document.createElement('li');
+
+    // Manual selection highlight (when user clicks the tree)
+    if (selected.dasa === mi) li.classList.add('tree-sel-dasa');
+
+    // Current-by-date highlight (always show)
+    if (mi === curD) li.classList.add('tree-cur-dasa');
+
+    li.innerHTML = `<div><b>${namePlanet(md.lordKey)}</b> (${nameNakByIdx(md.nakIdx)})</div>
+                    <div class="line-mini">${formatDateUI(md.start)} - ${formatDateUI(md.end)}</div>`;
+
+    li.onclick = ()=>{
+      selected = { dasa: mi, puthi: null, anth: null };
+      activeSplit = 'dasa';
+      renderPuthiColumn();
+      renderAnthColumn();
+      const {md,pt,at} = computeSelectionObjects();
+      renderCurrentSplits(md,pt,at);
+      renderDasaColumn();
+    };
+    ul.appendChild(li);
+  });
+}
+
+function renderPuthiColumn(){
+  const ul = colPuthi; ul.innerHTML = '';
+  if(!vimData || !vimData.length) return;
+
+  // Which dasa column is “active” to list its puthis?
+  const di = (selected.dasa != null)
+               ? selected.dasa
+               : (vimCurrentPath?.dasa ?? indexOfCurrent(vimData));
+  const md = vimData[di];
+
+  // Current (by date) puthi index under *that* dasa
+  const curP = (vimCurrentPath && vimCurrentPath.dasa === di && vimCurrentPath.puthi >= 0)
+                 ? vimCurrentPath.puthi
+                 : indexOfCurrent(md.puthis);
+
+  md.puthis.forEach((pt, pi)=>{
+    const li = document.createElement('li');
+
+    // Manual selection highlight (user click)
+    if (selected.puthi === pi) li.classList.add('tree-sel-puthi');
+
+    // Current-by-date highlight (always show)
+    if (pi === curP) li.classList.add('tree-cur-puthi');
+
+    li.innerHTML = `<div><b>${namePlanet(pt.lordKey)}</b> (${nameNakByIdx(pt.nakIdx)})</div>
+                    <div class="line-mini">${formatDateUI(pt.start)} - ${formatDateUI(pt.end)}</div>`;
+
+    li.onclick = ()=>{
+      selected.puthi = pi;
+      selected.anth  = null;
+      activeSplit = 'puthi';
+      renderAnthColumn();
+      const obj = computeSelectionObjects();
+      renderCurrentSplits(obj.md,obj.pt,obj.at);
+      renderPuthiColumn();
+    };
+    ul.appendChild(li);
+  });
+}
+
+function renderAnthColumn(){
+  const ul = colAnth; ul.innerHTML = '';
+  if(!vimData || !vimData.length) return;
+
+  // “Active” dasa + puthi to list antharas
+  const di = (selected.dasa != null)
+               ? selected.dasa
+               : (vimCurrentPath?.dasa ?? indexOfCurrent(vimData));
+  const md = vimData[di];
+
+  const pi = (selected.puthi != null)
+               ? selected.puthi
+               : ((vimCurrentPath && vimCurrentPath.dasa === di && vimCurrentPath.puthi >= 0)
+                    ? vimCurrentPath.puthi
+                    : indexOfCurrent(md.puthis));
+
+  const atArr = md.puthis[pi].antharas;
+
+  // Current (by date) anthara index under that puthi
+  const curA = (vimCurrentPath
+                && vimCurrentPath.dasa === di
+                && vimCurrentPath.puthi === pi
+                && vimCurrentPath.anth >= 0)
+                  ? vimCurrentPath.anth
+                  : indexOfCurrent(atArr);
+
+  atArr.forEach((at, ai)=>{
+    const li = document.createElement('li');
+
+    // Manual selection highlight
+    if (selected.anth === ai) li.classList.add('tree-sel-anth');
+
+    // Current-by-date highlight (always show)
+    if (ai === curA) li.classList.add('tree-cur-anth');
+
+    li.innerHTML = `<div><b>${namePlanet(at.lordKey)}</b> (${nameNakByIdx(at.nakIdx)})</div>
+                    <div class="line-mini">${formatDateUI(at.start)} - ${formatDateUI(at.end)}</div>`;
+
+    li.onclick = ()=>{
+      selected.anth = ai;
+      activeSplit = 'anth';
+      const obj = computeSelectionObjects();
+      renderCurrentSplits(obj.md,obj.pt,obj.at);
+      renderAnthColumn();
+    };
+    ul.appendChild(li);
+  });
+}
+
+function buildPlanetsTable(planets){
+  const tb = document.querySelector('#planetsDmsTable tbody');
+  tb.innerHTML = '';
+  planetsCard.style.display = 'block';
+
+  const order = ['Ascendant','Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Rahu','Ketu'];
+  const L = LABELS[LANG].tbl; // localized column labels
+
+  order.forEach(key=>{
+    if(planets[key] && typeof planets[key].fullDegree==='number'){
+      const {deg,min,sec} = decToDMS(planets[key].fullDegree);
+      const totalDeg = planets[key].fullDegree % 360;
+
+      const nakIdx   = Math.floor(totalDeg / nakLen);
+      const nakName  = nameNakByIdx(nakIdx);
+      const pada     = Math.floor((totalDeg % nakLen) / (nakLen/4)) + 1;
+
+      const rasiIndex = Math.floor(totalDeg / 30);
+      const rasiName  = nameRasiByIdx(rasiIndex);
+      const rasiOwner = namePlanet(RASIS[rasiIndex].lord);
+      const nakOwner  = namePlanet(NAKS[nakIdx].lord);
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td data-label="${L.planet}">${displayPlanetLabelFromApiKey(key)}</td>
+        <td data-label="${L.deg}">${deg}° ${min}' ${sec}"</td>
+        <td data-label="${L.nak}">${nakName} — ${LABELS[LANG].pada} ${pada}</td>
+        <td data-label="${L.rasi}">${rasiName}</td>
+        <td data-label="${L.rasiLord}">${rasiOwner}</td>
+        <td data-label="${L.nakLord}">${nakOwner}</td>
+      `;
+      tb.appendChild(tr);
+    }
+  });
+}
+
+/* ===== Orchestrator ===== */
+function renderAll(nowParam){
+  const now=nowParam || (caldate.value? new Date(caldate.value): new Date());
+  const md=vimData?.[vimCurrentPath.dasa], pt=md?.puthis?.[vimCurrentPath.puthi], at=pt?.antharas?.[vimCurrentPath.anth];
+  const mdPada=getCurrentPada(md,now), ptPada=getCurrentPada(pt,now), atPada=getCurrentPada(at,now);
+
+  showCurrentDasaPadaHighlight();
+  renderSummary(md,mdPada,pt,ptPada,at,atPada);
+
+  selected={dasa:null, puthi:null, anth:null};
+  renderDasaColumn(); renderPuthiColumn(); renderAnthColumn();
+  const obj=computeSelectionObjects();
+  renderCurrentSplits(obj.md,obj.pt,obj.at);
+
+  
+    const Ld=parseInt(lagna_deg.value)||0, Lm=parseInt(lagna_min.value)||0, Ls=parseInt(lagna_sec.value)||0;
+  const totalDeg= Ld + Lm/60 + Ls/3600;
+  const lagnaPada=Math.floor(((totalDeg%360)+360)%360 / (360/108))+1;
+
+  // ✅ which sign holds the lagna-start pada? (0..11)
+  RASI_NUMBER_START_IDX = Math.floor((lagnaPada-1)/9);
+
+  applyRasiNumberChips();                 // refresh title numbers
+  highlightLagnaNumberedBands(lagnaPada); // your existing band highlight
+
+  placeMoonSymbolToPada( getMoonPadaIndex(Number(moon_deg.value), Number(moon_min.value), Number(moon_sec.value)) );
+  highlightLagnaNumberedBands(lagnaPada);
+}
+function placePlanetsOnChart(planets){
+  if(!planets||!padaDomList.length) return;
+  for(let i=1;i<=108;i++){ const cell=padaDomList[i]; if(!cell) continue; [...cell.querySelectorAll("[class^='planet-']")].forEach(el=>el.remove()); }
+  const allow = ['Ascendant','Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Rahu','Ketu'];
+  Object.entries(planets).forEach(([key,obj])=>{
+    if(obj && obj.fullDegree!=null && allow.includes(key)){
+      const idx=getGlobalPada(obj.fullDegree); const cell=padaDomList[idx]; if(cell){
+        const span=document.createElement('span');
+        span.textContent=displayPlanetLabelFromApiKey(key);
+        span.textContent = planetShort2FromApiKey(key);
+        span.className=`planet-${key}`;
+        span.style.cssText='font-size:0.9em;margin-left:4px;color:#d22;';
+        cell.appendChild(span);
+      }
+    }
+  });
+}
+function getMoonPadaIndex(d,m,s){ const degree=Number(d)+Number(m)/60+Number(s)/3600; const NAK=13+20/60; const P=NAK/4; return Math.floor((degree%360)/P)+1; }
+function placeMoonSymbolToPada(globalPada){ document.querySelectorAll('.moon-pada-marker').forEach(e=>e.remove()); const el=padaDomList[globalPada]; if(el){ el.insertAdjacentHTML('beforeend', `<span class="moon-pada-marker" style="font-size:1.2em;margin-left:5px;">🌙</span>`); } }
+
+/* ===== Run & Save ===== */
+btnRun.addEventListener('click', ()=>run());
+/* ===== Run & Save ===== */
+function run(){
+  mode='current';
+
+  const dobStr = dob_.value;
+  const mdeg   = parseInt(moon_deg.value) || 0;
+  const mmin   = parseInt(moon_min.value) || 0;
+  const msec   = parseInt(moon_sec.value) || 0;
+  const moon   = mdeg + mmin/60 + msec/3600;
+
+  if (isNaN(moon) || moon < 0 || moon >= 360) {
+    alert(LANG==='ta' ? 'சந்திரன் நீளம் சரிபார்க்கவும்.' : 'Check Moon longitude.');
+    return;
+  }
+
+  const dobDate = new Date(dobStr);
+  if (isNaN(dobDate.getTime())) {
+    alert(LANG==='ta' ? 'பிறந்த தேதி சரிபார்க்கவும்.' : 'Check DOB.');
+    return;
+  }
+
+  const now = caldate.value ? new Date(caldate.value) : new Date();
+
+  // compute vimshottari + current path
+  vimData        = dasaTree(moon, dobDate, now);
+  vimCurrentPath = findCurrentPath(vimData);
+
+  // redraw UI
+  drawChartGrid();
+  if (window.savedPlanetsForChart) {
+    placePlanetsOnChart(window.savedPlanetsForChart);
+  }
+  renderAll(now);
+
+  // === NEW: auto-save last session to IndexedDB (only if planets exist) ===
+  try {
+    const planetsToSave = window.savedPlanetsForChart || null;
+    if (planetsToSave && typeof idbPlanets?.put === 'function') {
+      idbPlanets.put('latest', {
+        planets: planetsToSave,
+        inputs: {
+          dob: dobStr,
+          caldate: caldate.value || '',
+          moon: { deg: mdeg, min: mmin, sec: msec }
+        }
+      }).catch(err => console.error('IndexedDB save failed:', err));
+    }
+  } catch (e) {
+    console.error('Save block error:', e);
+  }
+}
+
+document.getElementById('btnRun')?.addEventListener('click', run);
+
+/* Save PNG/PDF (same) */
+function targetNode(){ return document.getElementById(saveTarget.value); }
+function stampName(base,ext){
+  const c=caldate.value? new Date(caldate.value): new Date();
+  const y=c.getFullYear(), m=String(c.getMonth()+1).padStart(2,'0'), d=String(c.getDate()).padStart(2,'0'), hh=String(c.getHours()).padStart(2,'0'), mm=String(c.getMinutes()).padStart(2,'0');
+  return `jps-astro_${base}_${y}${m}${d}-${hh}${mm}.${ext}`;
+}
+btnSavePng.addEventListener('click', async ()=>{
+  const node=targetNode(); if(!node){ alert('Invalid section'); return; }
+  const canvas=await html2canvas(node,{scale:2, backgroundColor:getComputedStyle(document.body).getPropertyValue('--bg')});
+  const link=document.createElement('a'); link.download=stampName(saveTarget.value,'png'); link.href=canvas.toDataURL('image/png'); link.click();
+});
+btnSavePdf.addEventListener('click', async () => {
+  const { jsPDF } = window.jspdf;
+  const node = targetNode();
+  if (!node) { alert('Invalid section'); return; }
+
+  const bg = getComputedStyle(document.body).getPropertyValue('--bg') || '#ffffff';
+  // Capture at scale 1.5 (render quality)
+  const canvas = await html2canvas(node, { scale: 1.5, backgroundColor: bg });
+  const imgData = canvas.toDataURL('image/png');
+
+  // A4 PDF
+  const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+
+  // margins (adjust if needed)
+  const margin = 20;
+  const maxW = pageW - margin * 2;
+  const maxH = pageH - margin * 2;
+
+  // Fit image to single page
+  const fitScale = Math.min(maxW / canvas.width, maxH / canvas.height);
+  const imgW = canvas.width * fitScale;
+  const imgH = canvas.height * fitScale;
+
+  // center
+  const x = (pageW - imgW) / 2;
+  const y = (pageH - imgH) / 2;
+
+  pdf.addImage(imgData, 'PNG', x, y, imgW, imgH);
+  pdf.save(stampName(saveTarget.value, 'pdf'));
+});
+
+
+
+
+/* --- Blink timing: 3s ON, 1s OFF --- */
+const BLINK_ON_MS  = 3000;  // show highlights for 3s
+const BLINK_OFF_MS = 1000;  // hide for 1s
+
+let blinkTimeout = null;    // replaces setInterval
+let blinkMode    = null;    // "seq" | "dasa" | "puthi" | "anth" | null
+let seqStep      = 0;       // 0=dasa, 1=puthi, 2=anth
+
+const BLINK_CLASS = {
+  dasa:  'highlight-pada-dasa',
+  puthi: 'highlight-pada-puthi',
+  anth:  'highlight-pada-anthara'
+};
+
+function idxSetPlus9Plus18(nakId, pada){
+  return [0,9,18].map(shift=>{
+    const targetNak = NAKS[(NAK_INDEX_BY_ID[nakId] + shift) % 27].id;
+    return findPadaIndexById(targetNak, pada);
+  }).filter(i=>i>0);
+}
+
+function getCurrentTriple(mode){
+  const now = caldate.value ? new Date(caldate.value) : new Date();
+  const md  = vimData?.[vimCurrentPath.dasa];
+  const pt  = md?.puthis?.[vimCurrentPath.puthi];
+  const at  = pt?.antharas?.[vimCurrentPath.anth];
+
+  const mdPada = getCurrentPada(md, now);
+  const ptPada = getCurrentPada(pt, now);
+  const atPada = getCurrentPada(at, now);
+
+  if(mode==='dasa' && mdPada.pada) return {pada: mdPada.pada, nakId: mdPada.nakId, className: BLINK_CLASS.dasa};
+  if(mode==='puthi'&& ptPada.pada) return {pada: ptPada.pada, nakId: ptPada.nakId, className: BLINK_CLASS.puthi};
+  if(mode==='anth' && atPada.pada) return {pada: atPada.pada, nakId: atPada.nakId, className: BLINK_CLASS.anth};
+  return null;
+}
+
+function applyBlinkSet(mode, on){
+  const triple = getCurrentTriple(mode);
+  if(!triple) return;
+  const {pada, nakId, className} = triple;
+  idxSetPlus9Plus18(nakId, pada).forEach(idx=>{
+    const el = padaDomList[idx];
+    if(!el) return;
+    if(on) el.classList.add(className);
+    else   el.classList.remove(className);
+  });
+}
+
+function clearAllBlinkClasses(){
+  Object.values(BLINK_CLASS).forEach(cls=>{
+    document.querySelectorAll('.'+cls).forEach(el=>el.classList.remove(cls));
+  });
+}
+
+function setBlinkButtonsActive(mode){
+  ['btnBlinkSeq','btnBlinkDasa','btnBlinkPuthi','btnBlinkAnth'].forEach(id=>{
+    const b = document.getElementById(id);
+    if(!b) return;
+    b.classList.remove('active');
+  });
+  if(mode==='seq')   document.getElementById('btnBlinkSeq')?.classList.add('active');
+  if(mode==='dasa')  document.getElementById('btnBlinkDasa')?.classList.add('active');
+  if(mode==='puthi') document.getElementById('btnBlinkPuthi')?.classList.add('active');
+  if(mode==='anth')  document.getElementById('btnBlinkAnth')?.classList.add('active');
+}
+
+function statusLabel(mode){
+  if(LANG==='ta'){
+    if(!mode)        return '—';
+    if(mode==='seq') return '🔆 மின்மினிப்பு: தசை/புக்தி/அந்தரம்';
+    if(mode==='dasa')return '🔆 மின்மினிப்பு: தசை';
+    if(mode==='puthi')return '🔆 மின்மினிப்பு: புக்தி';
+    if(mode==='anth') return '🔆 மின்மினிப்பு: அந்தரம்';
+  } else {
+    if(!mode)        return '—';
+    if(mode==='seq') return '🔆 Blinking: Dasa/Puthi/Anthra';
+    if(mode==='dasa')return '🔆 Blinking: Dasa';
+    if(mode==='puthi')return '🔆 Blinking: Puthi';
+    if(mode==='anth') return '🔆 Blinking: Anthra';
+  }
+}
+
+function updateBlinkStatus(mode){
+  const el = document.getElementById('blinkStatus');
+  if(el) el.textContent = statusLabel(mode); // no opacity toggle => text doesn’t blink
+}
+function stopBlink(){
+  if(blinkTimeout){ clearTimeout(blinkTimeout); blinkTimeout=null; }
+  clearAllBlinkClasses();
+  showCurrentDasaPadaHighlight();  // restore default greens
+  blinkMode = null;
+  setBlinkButtonsActive(null);
+  updateBlinkStatus(null);
+}
+
+function startBlink(mode){
+  stopBlink();               // reset any previous blink
+  clearGreenHighlights();    // hide default greens while blinking
+  blinkMode = mode;
+  setBlinkButtonsActive(mode);
+  updateBlinkStatus(mode);
+  seqStep = 0;
+
+  // One full ON→OFF cycle
+  const cycleOnce = () => {
+    clearAllBlinkClasses();
+
+    // Which set to show during ON phase
+    let modeNow = mode;
+    if(mode === 'seq'){
+      const modes = ['dasa','puthi','anth'];
+      modeNow = modes[seqStep];
+    }
+
+    // ON phase (3s)
+    applyBlinkSet(modeNow, true);
+    blinkTimeout = setTimeout(() => {
+      // OFF phase (1s)
+      clearAllBlinkClasses();
+      if(mode === 'seq'){ seqStep = (seqStep + 1) % 3; }
+      blinkTimeout = setTimeout(cycleOnce, BLINK_OFF_MS);
+    }, BLINK_ON_MS);
+  };
+  cycleOnce();
+}
+/* Button hooks with toggle behavior */
+document.getElementById('btnBlinkSeq').onclick   = ()=> (blinkMode==='seq'  ? stopBlink() : startBlink('seq'));
+document.getElementById('btnBlinkDasa').onclick  = ()=> (blinkMode==='dasa' ? stopBlink() : startBlink('dasa'));
+document.getElementById('btnBlinkPuthi').onclick = ()=> (blinkMode==='puthi'? stopBlink() : startBlink('puthi'));
+document.getElementById('btnBlinkAnth').onclick  = ()=> (blinkMode==='anth' ? stopBlink() : startBlink('anth'));
+/* =====  Layout toggle wiring — ===== */
+document.getElementById('btnLayoutFlat').onclick = () => {
+  // toggle mode
+  FLAT_LAYOUT = !FLAT_LAYOUT;
+
+  // update button label
+  const btn = document.getElementById('btnLayoutFlat');
+  if (LANG === 'ta'){
+    btn.textContent = FLAT_LAYOUT ? 'South Chart' : '3×4 கட்டம்';
+  } else {
+    btn.textContent = FLAT_LAYOUT ? 'South Chart' : '3×4 Chart';
+  }
+  btn.classList.toggle('active', FLAT_LAYOUT);
+
+  // 🔑 Rebuild the grid NOW (no API/re-calc needed)
+  drawChartGrid();
+
+  // put planets back if you have them
+  if (savedPlanetsForChart) placePlanetsOnChart(savedPlanetsForChart);
+
+  // respect your toggles
+  if (typeof refreshOwnerRasiVisibility === 'function') refreshOwnerRasiVisibility();
+if (typeof refreshPlanetTags === 'function')          refreshPlanetTags();
+
+  // if Vimshottari already computed once, refresh summaries/highlights
+  if (vimData) renderAll();
+};
+
+
+// Also react to mobile resize so reverse logic switches off/on automatically
+window.addEventListener('resize', () => {
+  drawChartGrid();
+  if (savedPlanetsForChart) placePlanetsOnChart(savedPlanetsForChart);
+  refreshOwnerRasiVisibility();
+  refreshPlanetTags();
+  if (vimData) renderAll();
+});
+
+
+/* Keep language text correct whenever you switch LANG */
+(function patchApplyLangForBlink(){
+  const _applyLang = applyLang;
+  applyLang = function(){
+    _applyLang();
+    // refresh blink label/button text & status each time language toggles
+    updateBlinkStatus(blinkMode);
+  };
+})();
+/* ================== Disable default Rasi-name highlight; only padas by default ================== */
+let ALLOW_OWNER_RASI_DEFAULT = false;   // keep rasi titles OFF by default
+let RASI_NAME_SEQ_ACTIVE = false;       // ON only when sequence button is running
+
+(function guardOwnerTitleDefault(){
+  if (typeof highlightOwnerRasiForPeriod === 'function') {
+    const _real = highlightOwnerRasiForPeriod;
+    window.__realHighlightOwnerRasiForPeriod = _real;
+    window.highlightOwnerRasiForPeriod = function(mode, nakId, padaNum){
+      if (!ALLOW_OWNER_RASI_DEFAULT && !RASI_NAME_SEQ_ACTIVE) return; // block default calls
+      _real(mode, nakId, padaNum);
+    };
+  }
+})();
+
+/* ================== Rasi-name sequence: Dasa → Puthi → Anth (3min ON / 1min OFF) ================== */
+const RASI_SEQ_ON_MS  = 3000;   // 3 sec ON
+const RASI_SEQ_OFF_MS = 1000;   // 1 sec  OFF
+
+let rasiNameSeqTimer = null;
+let rasiNameSeqActive = false;
+let rasiNameSeqStage = 0;          // 0=dasa, 1=puthi, 2=anth
+let rasiOnPhase = false;           // whether we're currently in the ON phase
+
+// reuse your existing helpers
+// - getCurrentTriple(mode) -> {pada, nakId, className}
+// - idxSetPlus9Plus18(nakId, pada) -> [globalPadaIdx,...]
+// - BLINK_CLASS map
+
+function rasiStageKey(){ return ['dasa','puthi','anth'][rasiNameSeqStage]; }
+
+function rasiSeqStatusText(){
+  if (LANG === 'ta'){
+    const s = ['தசை','புக்தி','அந்தரம்'][rasiNameSeqStage];
+    return rasiOnPhase ? (`🔆 ${s} — ராசி பெயர் & பாதங்கள்`) : '—';
+  } else {
+    const s = ['Dasa','Puthi','Anthra'][rasiNameSeqStage];
+    return rasiOnPhase ? (`🔆 ${s} — Rasi name & padas`) : '—';
+  }
+}
+function updateRasiSeqUI(){
+  // Only toggle the button's active state; no label/status text.
+  const b = document.getElementById('btnRasiNameSeq');
+  if (b) b.classList.toggle('active', rasiNameSeqActive);
+}
+function applyStageOn(){
+  // Turn on ONLY the owner Rasi title for this stage (no pada highlights)
+  const mode = rasiStageKey();
+  const triple = getCurrentTriple(mode);  // {pada, nakId, className}
+  clearOwnerRasiHighlights();
+
+  if (triple && triple.pada){
+    RASI_NAME_SEQ_ACTIVE = true; // allow the guarded title-highlighter to run
+    try { __realHighlightOwnerRasiForPeriod(mode, triple.nakId, triple.pada); } catch(e){}
+    // NOTE: intentionally no pada blinking here.
+  }
+}
+
+function applyStageOff(){
+  clearOwnerRasiHighlights();
+  Object.values(BLINK_CLASS).forEach(cls=>{
+    document.querySelectorAll('.'+cls).forEach(el=>el.classList.remove(cls));
+  });
+  clearPadaDots(); /* NEW */
+}
+
+function rasiNameSeqStep(){
+  if (!rasiNameSeqActive) return;
+
+  // ON phase
+  rasiOnPhase = true;
+  // hide the normal fixed-green padas while we run the sequence
+  clearGreenHighlights();
+  applyStageOn();
+  updateRasiSeqUI();
+
+  rasiNameSeqTimer = setTimeout(()=>{
+    // OFF phase
+    rasiOnPhase = false;
+    applyStageOff();
+    updateRasiSeqUI();
+
+    rasiNameSeqTimer = setTimeout(()=>{
+      // next stage
+      rasiNameSeqStage = (rasiNameSeqStage + 1) % 3;
+      rasiNameSeqStep();
+    }, RASI_SEQ_OFF_MS);
+
+  }, RASI_SEQ_ON_MS);
+}
+
+function applyStageOn(){
+  const mode = rasiStageKey();
+  const triple = getCurrentTriple(mode);
+  clearOwnerRasiHighlights();
+
+  if (triple && triple.pada){
+    // allow rasi title highlight during the sequence
+    RASI_NAME_SEQ_ACTIVE = true;
+    try { __realHighlightOwnerRasiForPeriod(mode, triple.nakId, triple.pada); } catch(e){}
+
+    // 🚫 Do NOT highlight any nakshatra-pada rows for D/P/A here
+    // ✅ Only add the dark-green dot in the correct pada of that rasi
+    addDotsForMode(mode);
+  }
+}
+
+function stopRasiNameSeq(){
+  rasiNameSeqActive = false;
+  RASI_NAME_SEQ_ACTIVE = false;
+  if (rasiNameSeqTimer){ clearTimeout(rasiNameSeqTimer); rasiNameSeqTimer = null; }
+  applyStageOff();
+  // restore your normal current padas (no rasi titles by default)
+  try { showCurrentDasaPadaHighlight(); } catch(e){}
+  updateRasiSeqUI();
+}
+// 🔒 Auto-stop Rasi-name sequence when any other button is clicked
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('button');
+  if (!btn) return;                   // not a button click
+  if (btn.id === 'btnRasiNameSeq') return; // allow its own toggle
+  if (typeof stopRasiNameSeq === 'function' && rasiNameSeqActive){
+    stopRasiNameSeq();                // hide rasi-name titles & dots
+  }
+});
+
+function startRasiNameSeq(){
+  if (rasiNameSeqActive) return;
+
+  // Ensure no other pada effects are visible
+  stopBlink();            // turn off blink modes if active
+  clearGreenHighlights(); // hide fixed green D/P/A rows
+
+  rasiNameSeqActive    = true;
+  RASI_NAME_SEQ_ACTIVE = true;
+  rasiNameSeqStage     = 0;
+  rasiOnPhase          = false;
+  rasiNameSeqStep();     // begin ON/OFF loop
+  updateRasiSeqUI();
+}
+
+document.getElementById('btnRasiNameSeq')?.addEventListener('click', ()=>{
+  if (rasiNameSeqActive) stopRasiNameSeq();
+  else startRasiNameSeq();
+});
+
+
+
+
+/* Re-apply ON-phase highlights after grid rebuilds (so sequence persists) */
+
+
+(function patchDrawForRasiSeq(){
+  if (typeof drawChartGrid === 'function'){
+    const _draw = drawChartGrid;
+    window.drawChartGrid = function(){
+      _draw();
+      if (rasiNameSeqActive && rasiOnPhase){
+        applyStageOn();                 // you already had this logic
+        addDotsForMode(rasiStageKey()); // NEW ensure the dot comes back too
+      }
+    };
+  }
+})();
+/* Keep labels synced when language toggles */
+(function patchLangForRasiSeq(){
+  const _applyLang = applyLang;
+  window.applyLang = function(){
+    _applyLang();
+    updateRasiSeqUI();
+  };
+})();
+
+/* ---------- DOT HELPERS (planet->sign->9-split) ---------- */
+function signIndexById(id){ return RASIS.findIndex(r=>r.id===id); }
+
+function getNodeSignId(lordKey){
+  if(lordKey==='rahu' || lordKey==='ketu'){
+    const node = savedPlanetsForChart?.[lordKey==='rahu'?'Rahu':'Ketu'];
+    if(node && typeof node.fullDegree==='number'){
+      const deg = ((node.fullDegree%360)+360)%360;
+      const sIdx = Math.floor(deg/30);
+      return RASIS[sIdx].id;
+    }
+  }
+  return null;
+}
+
+function clearPadaDots(){
+  document.querySelectorAll('.pada-dot-dark').forEach(el=>el.remove());
+}
+
+function addDotToCellByNakPada(nakId,pada){
+  const idx = findPadaIndexById(nakId, pada);
+  if(idx<0) return;
+  const cell = padaDomList[idx];
+  if(!cell) return;
+  const dot = document.createElement('span');
+  dot.className = 'pada-dot-dark';
+  cell.appendChild(dot);
+}
+
+/* Map time->subindex(0..8) within a time window */
+function subIndex9(now, start, end){
+  const total = end - start; if(total<=0) return 0;
+  const t = Math.min(Math.max(now - start, 0), total-1);
+  const part = total / 9;
+  let sub = Math.floor(t / part);
+  if(sub<0) sub=0; if(sub>8) sub=8;
+  return sub;
+}
+
+/* Get the period object for a mode ('dasa'|'puthi'|'anth') */
+function periodForMode(mode){
+  if(!vimData || !vimCurrentPath) return null;
+  const di = vimCurrentPath.dasa;
+  if(di<0) return null;
+  const md = vimData[di];
+  if(mode==='dasa') return md;
+  const pi = vimCurrentPath.puthi;
+  if(pi<0) return null;
+  const pt = md.puthis[pi];
+  if(mode==='puthi') return pt;
+  const ai = vimCurrentPath.anth;
+  if(ai<0) return null;
+  return pt.antharas[ai];
+}
+// For a period, return [start,end] bounds for the current 2-pada group:
+// pada 1–2 => first half, pada 3–4 => second half
+function boundsForPadaGroup(per, padaNum){
+  const total = per.end - per.start;
+  const mid   = new Date(per.start.getTime() + total/2);
+  return (padaNum <= 2) ? [per.start, mid] : [mid, per.end];
+}
+
+/* Core: add ONE dark-green dot for current mode, by planet rules */
+function addDotsForMode(mode){
+  clearPadaDots();
+
+  const per = periodForMode(mode);
+  if(!per) return;
+
+  const now = caldate.value ? new Date(caldate.value) : new Date();
+  const cur = getCurrentPada(per, now);
+  if(!cur || !cur.pada) return;              // need current pada (1..4)
+
+  // Figure out whose houses to use:
+  // - normal planets: the period lord itself
+  // - Rahu/Ketu: the OWNER planet of the sign where the node sits
+  let ownerKey = per.lordKey;
+  if(ownerKey === 'rahu' || ownerKey === 'ketu'){
+    ownerKey = effectiveOwnerFor(ownerKey) || null; // e.g., 'venus' if Rahu in Libra
+  }
+
+  let signId = null, groupStart = per.start, groupEnd = per.end;
+
+  if(ownerKey && PLANET_OWNERSHIP[ownerKey]){
+    const info = PLANET_OWNERSHIP[ownerKey];
+
+    if(info.homes.length === 1){
+      // Sun/Moon (or owner with single home): whole period → 9 equal parts
+      signId     = info.homes[0];
+      groupStart = per.start;
+      groupEnd   = per.end;
+
+    } else {
+      // Dual-home owners: pada 1–2 => moola, pada 3–4 => other home
+      signId = chooseSignByPada(ownerKey, cur.pada);
+      const [gs, ge] = boundsForPadaGroup(per, cur.pada); // half made of two padas
+      groupStart = gs; groupEnd = ge;
+    }
+
+  } else {
+    // Fallback: if we couldn't resolve owner for nodes, use node's own sign
+    if(per.lordKey === 'rahu' || per.lordKey === 'ketu'){
+      signId     = getNodeSignId(per.lordKey);
+      groupStart = per.start;
+      groupEnd   = per.end;
+    }
+  }
+
+  if(!signId) return;
+
+  // Within the chosen sign, pick 1 of its 9 cells by dividing [groupStart,groupEnd] into 9
+  const sIdx = signIndexById(signId);
+  if(sIdx < 0) return;
+
+  const sub  = subIndex9(now, groupStart, groupEnd);   // 0..8
+  const pair = RASI_GRID[sIdx][sub];                   // [nakId, pada]
+  if(!pair) return;
+
+  addDotToCellByNakPada(pair[0], pair[1]);             // draw the dark green dot
+}
+/* ---------- Navamsa mapping (planet set -> rasi for pada1..4) ---------- */
+const NAVAMSA_GROUPS = {
+  A: { lords: new Set(['moon','ketu','jupiter']),
+       signs: ['aries','taurus','gemini','cancer'] },
+  B: { lords: new Set(['venus','saturn','mars']),
+       signs: ['leo','virgo','libra','scorpio'] },
+  C: { lords: new Set(['sun','rahu','mercury']),
+       signs: ['sagittarius','capricorn','aquarius','pisces'] }
+};
+
+function navamsaSignFor(lordKey, pada1to4){
+  const g = [NAVAMSA_GROUPS.A, NAVAMSA_GROUPS.B, NAVAMSA_GROUPS.C]
+            .find(G => G.lords.has(lordKey));
+  if(!g || !pada1to4) return null;
+  return g.signs[(pada1to4 - 1) % 4];
+}
+
+function highlightRasiTitleByMode(mode, signId){
+  clearOwnerRasiHighlights();
+  if(!signId) return;
+  const cls = (mode==='dasa') ? 'owner-rasi-dasa'
+            : (mode==='puthi')? 'owner-rasi-puthi'
+            :                      'owner-rasi-anth';
+  highlightWholeRasi(signId, cls);
+}
+
+/* Use current pada window (of dasa/puthi/anth), map to Navamsa sign, add 1 dot */
+function addNavamsaDotForMode(mode){
+  clearPadaDots();                                     // no cell highlight, only dot
+  const per = periodForMode(mode);
+  if(!per) return;
+
+  const now = caldate.value ? new Date(caldate.value) : new Date();
+  const cp  = getCurrentPada(per, now);                // {pada, from, to}
+  if(!cp.pada) return;
+
+  const signId = navamsaSignFor(per.lordKey, cp.pada); // map via sets above
+  if(!signId) return;
+
+  // Rasi title (glow) in that mode color
+  highlightRasiTitleByMode(mode, signId);
+
+  // Dot position = which of the 9 cells in this sign, by time within the pada-window
+  const sIdx = signIndexById(signId);
+  if(sIdx < 0) return;
+
+  const sub  = subIndex9(now, cp.from, cp.to);         // 0..8 equally split
+  const pair = RASI_GRID[sIdx][sub];                   // [nakId, pada]
+  if(pair) addDotToCellByNakPada(pair[0], pair[1]);
+}
+/* Create the Navamsa Rasi button next to the Rasi-name sequence button */
+(function addNavamsaButton(){
+  const bar = document.getElementById('blinkControls');
+  if (!bar || document.getElementById('btnNavamsaSeq')) return;
+
+  const b = document.createElement('button');
+  b.id = 'btnNavamsaSeq';
+  b.className = 'btn';
+  b.textContent = (LANG==='ta'
+    ? 'நவாம்ச ராசி — தசை→புக்தி→அந்தரம்'
+    : 'Navamsa Rasi — Dasa→Puthi→Anthra');
+  b.onclick = () => (navSeqActive ? stopNavamsaSeq() : startNavamsaSeq());
+  bar.appendChild(b);
+})();
+
+/* ===== Navamsa Rasi sequence (like your rasi-name seq, but using Navamsa rules) ===== */
+let navSeqActive = false;
+let navSeqTimer  = null;
+let navSeqStage  = 0;   // 0=dasa, 1=puthi, 2=anth
+let navOnPhase   = false;
+
+function navStageKey(){ return ['dasa','puthi','anth'][navSeqStage]; }
+
+function applyNavStageOn(){
+  // hide the normal fixed greens while showing navamsa title+dot
+  clearGreenHighlights();
+  addNavamsaDotForMode(navStageKey()); // adds title (glow) + single dark-green dot
+}
+
+function applyNavStageOff(){
+  clearOwnerRasiHighlights();
+  clearPadaDots();
+}
+
+function startNavamsaSeq(){
+  // make them mutually exclusive
+  if (typeof stopRasiNameSeq === 'function') stopRasiNameSeq();
+  if (typeof stopBlink === 'function')       stopBlink();   // ← 
+
+  navSeqActive = true;
+  navSeqStage  = 0;
+  navOnPhase   = false;
+  document.getElementById('btnNavamsaSeq')?.classList.add('active');
+
+  const step = () => {
+    if(!navSeqActive) return;
+    navOnPhase = true;
+    applyNavStageOn();
+    navSeqTimer = setTimeout(()=>{
+      navOnPhase = false;
+      applyNavStageOff();
+      navSeqStage = (navSeqStage + 1) % 3;
+      navSeqTimer = setTimeout(step, RASI_SEQ_OFF_MS); // reuse your 1s OFF
+    }, RASI_SEQ_ON_MS); // reuse your 3s ON
+  };
+  step();
+}
+
+function stopNavamsaSeq(){
+  if (navSeqTimer){ clearTimeout(navSeqTimer); navSeqTimer = null; }
+  navSeqActive = false;
+  document.getElementById('btnNavamsaSeq')?.classList.remove('active');
+  applyNavStageOff();
+  // restore the normal current green padas after stopping
+  if (typeof showCurrentDasaPadaHighlight === 'function') showCurrentDasaPadaHighlight();
+}
+
+/* Keep it alive across grid rebuilds (like you did for rasi-name seq) */
+(function patchDrawForNavSeq(){
+  if (typeof drawChartGrid === 'function'){
+    const _draw = drawChartGrid;
+    window.drawChartGrid = function(){
+      _draw();
+      if (navSeqActive && navOnPhase){
+        addNavamsaDotForMode(navStageKey());
+      }
+    };
+  }
+})();
+
+/* Keep label/state consistent on language toggle */
+(function patchLangForNavSeq(){
+  const _applyLang = applyLang;
+  window.applyLang = function(){
+    _applyLang();
+    // nothing else needed; button text is handled above
+  };
+})();
+// 🔒 Auto-stop rasi-name AND navamsa sequences when any other button is clicked
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('button');
+  if (!btn) return;
+
+  if (btn.id !== 'btnRasiNameSeq' && typeof stopRasiNameSeq === 'function' && rasiNameSeqActive){
+    stopRasiNameSeq();
+  }
+  if (btn.id !== 'btnNavamsaSeq' && typeof stopNavamsaSeq === 'function' && navSeqActive){
+    stopNavamsaSeq();
+  }
+});
+// make rasi-name & navamsa mutually exclusive when starting either
+(function patchStartRasiSeqMutual(){
+  if (typeof startRasiNameSeq === 'function'){
+    const _start = startRasiNameSeq;
+    window.startRasiNameSeq = function(){
+      if (navSeqActive) stopNavamsaSeq();
+      _start();
+    };
+  }
+})();
+/* ===== Rasi title numbering (1..12) ===== */
+let RASI_NUMBER_START_IDX = 0; // 0=Aries(Mesham) by default
+
+function applyRasiNumberChips(){
+  // number shown on each sign: 1 at RASI_NUMBER_START_IDX, then 2..12 wrapping
+  RASIS.forEach((rasi, idx)=>{
+    const box = document.querySelector(`.box.${rasi.code}`);
+    if(!box) return;
+    const title = box.querySelector('.rasi-name');
+    if(!title) return;
+
+    const num = ((idx - RASI_NUMBER_START_IDX + 12) % 12) + 1;
+    const chip = `<span class="rasi-numchip numchip-${num} ${num===1?'lagna-start-chip':''}">${num}</span>`;
+    // keep only the plain name after the chip (no duplication when re-applied)
+    const label = rasi.name[LANG];
+    title.innerHTML = chip + label;
+  });
+}
+
+/* ========= Sticky Summary NAV — single delegate ========= */
+function toLocalInput(dt){
+  const d = new Date(dt);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0,16);
+}
+/* ========= Sticky Summary NAV — FIXED (used by stepPada) ========= */
+function setCalcAndRun(dt){
+  // stop running sequences so highlights don’t interfere
+  try{ if(typeof stopRasiNameSeq==='function') stopRasiNameSeq(); }catch(e){}
+  try{ if(typeof stopBlink==='function')       stopBlink();       }catch(e){}
+
+  // +2 calendar days from the period start
+  const d = new Date(dt);
+  d.setDate(d.getDate() + 2);
+
+  caldate.value = toLocalInput(d);
+  run();
+}
+
+function idxOfCurrentPada(splits, now){
+  for(let i=0;i<splits.length;i++){
+    if(now>=splits[i].start && now<splits[i].end) return i;
+  }
+  return 0;
+}
+function getNeighborPeriod(level, dir){
+  if(!vimData || !vimCurrentPath) return null;
+  let di = vimCurrentPath.dasa; if (di<0) di=0;
+  let md = vimData[di];
+
+  if(level==='dasa'){
+    return vimData[di + dir] || null;
+  }
+  if(level==='puthi'){
+    const pi = vimCurrentPath.puthi;
+    const npi = pi + dir;
+    if(npi>=0 && npi<md.puthis.length) return md.puthis[npi];
+    if(npi<0){ const prev = vimData[di-1]; if(!prev) return null; return prev.puthis[prev.puthis.length-1]; }
+    const next = vimData[di+1]; if(!next) return null; return next.puthis[0];
+  }
+  if(level==='anth'){
+    const pi = vimCurrentPath.puthi, pt = md.puthis[pi];
+    const ai = vimCurrentPath.anth,  nai = ai + dir;
+    if(nai>=0 && nai<pt.antharas.length) return pt.antharas[nai];
+    if(nai<0){ const prevPt = getNeighborPeriod('puthi', -1); if(!prevPt) return null; return prevPt.antharas[prevPt.antharas.length-1]; }
+    const nextPt = getNeighborPeriod('puthi', +1); if(!nextPt) return null; return nextPt.antharas[0];
+  }
+  return null;
+}
+function stepPada(level, dir){
+  const per = periodForMode(level);
+  if(!per) return;
+  const now    = caldate.value ? new Date(caldate.value) : new Date();
+  const splits = currentPadaSplit(per); // 4 parts
+  let idx = idxOfCurrentPada(splits, now) + dir;
+
+  if(idx>=0 && idx<4){
+    setCalcAndRun(splits[idx].start);   // snap to pada start
+    activeSplit = level;
+    return;
+  }
+  const neigh = getNeighborPeriod(level, dir);
+  if(!neigh) return;
+  setCalcAndRun(neigh.start);           // jump to neighbor period start
+  activeSplit = level;
+}
+
+/* ONE listener that survives re-rendering */
+document.getElementById('current')?.addEventListener('click', (ev)=>{
+  const resetBtn = ev.target.closest('button[data-reset="now"]');
+  if(resetBtn){
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    caldate.value = d.toISOString().slice(0,16);
+    run();
+    return;
+  }
+  const btn = ev.target.closest('button[data-mode][data-dir]');
+  if(!btn) return;
+  const mode = btn.dataset.mode;                 // 'dasa' | 'puthi' | 'anth'
+  const dir  = parseInt(btn.dataset.dir, 10) || 0; // -1 | +1
+  if(!dir || !mode) return;
+  stepPada(mode, dir);
+});
+
+/* ===== Vathai / Vainasigam (click any pada cell) ===== */
+let vathaiState = { baseIdx: null };
+
+function wrap108(baseIdx, offset){
+  // indices are 1..108
+  return ((baseIdx - 1 + offset) % 108 + 108) % 108 + 1;
+}
+
+function clearVathaiMarkers(){
+  document.querySelectorAll('.pada-dot-blue,.pada-dot-orange,.pada-star')
+    .forEach(el => el.remove());
+}
+
+function addMarkerAtGlobalIdx(idx, cls, text){
+  const cell = padaDomList[idx];
+  if(!cell) return;
+  const span = document.createElement('span');
+  if(text){ span.textContent = text; span.className = cls; }
+  else     { span.className = cls; }
+  cell.appendChild(span);
+}
+
+function applyVathaiForBaseIndex(baseIdx, remember=true){
+  if(remember) vathaiState.baseIdx = baseIdx;
+  clearVathaiMarkers();
+
+  // ⭐ star on clicked base
+  addMarkerAtGlobalIdx(baseIdx, 'pada-star', '⭐');
+
+  // 🔵 25–28 (i.e., +24..+27 from base)
+  [24,25,26,27].forEach(off=>{
+    addMarkerAtGlobalIdx(wrap108(baseIdx, off), 'pada-dot-blue');
+  });
+
+  // 🟠 85–88 (i.e., +84..+87 from base)
+  [84,85,86,87].forEach(off=>{
+    addMarkerAtGlobalIdx(wrap108(baseIdx, off), 'pada-dot-orange');
+  });
+}
+
+function reapplyVathai(){
+  if(vathaiState.baseIdx) applyVathaiForBaseIndex(vathaiState.baseIdx, false);
+}
+
+function toggleLegend(){
+  const el = document.getElementById('legend');
+  if(!el) return;
+  if (window.matchMedia('(max-width:900px)').matches){
+    // mobile: slide bottom sheet
+    el.classList.toggle('open');
+  }else{
+    // desktop: inline card show/hide
+    el.style.display = (el.style.display==='none' || !el.style.display) ? 'block' : 'none';
+  }
+}
+document.getElementById('btnHelp')?.addEventListener('click', toggleLegend);
+document.getElementById('legendClose')?.addEventListener('click', toggleLegend);
+
+// If user rotates/resizes, make sure we don't leave it stuck open invisibly
+window.addEventListener('resize', ()=>{
+  const el = document.getElementById('legend');
+  if(!el) return;
+  if (!window.matchMedia('(max-width:900px)').matches){
+    el.classList.remove('open'); // switch back to desktop mode
+  }
+});
+(function patchDrawForLagnaSticky(){
+  if (typeof drawChartGrid === 'function'){
+    const _draw = drawChartGrid;
+    window.drawChartGrid = function(){
+      _draw();
+      // put planets back as you already do elsewhere
+      if (typeof placePlanetsOnChart === 'function' && savedPlanetsForChart){
+        placePlanetsOnChart(savedPlanetsForChart);
+      }
+      // and re-apply lagna bands
+      reapplyLagnaBands();
+    };
+  }
+})();
+// ---- IndexedDB helper (AstroDB / planets store) ----
+const idbPlanets = (() => {
+  let dbp;
+  function open() {
+    if (dbp) return dbp;
+    dbp = new Promise((resolve, reject) => {
+      if (!('indexedDB' in window)) return reject(new Error('IndexedDB not supported'));
+      const req = indexedDB.open('AstroDB', 1);
+      req.onupgradeneeded = e => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('planets')) {
+          db.createObjectStore('planets', { keyPath: 'id' });
+        }
+      };
+      req.onsuccess = e => resolve(e.target.result);
+      req.onerror = () => reject(req.error);
+    });
+    return dbp;
+  }
+  async function put(id, data) {
+    const db = await open();
+    return new Promise((res, rej) => {
+      const tx = db.transaction('planets', 'readwrite');
+      tx.objectStore('planets').put({ id, data, ts: Date.now() });
+      tx.oncomplete = () => res(true);
+      tx.onerror   = () => rej(tx.error);
+    });
+  }
+  async function get(id) {
+    const db = await open();
+    return new Promise((res, rej) => {
+      const tx = db.transaction('planets', 'readonly');
+      const rq = tx.objectStore('planets').get(id);
+      rq.onsuccess = () => res(rq.result?.data || null);
+      rq.onerror   = () => rej(rq.error);
+    });
+  }
+  async function clear() {
+    const db = await open();
+    return new Promise((res, rej) => {
+      const tx = db.transaction('planets', 'readwrite');
+      tx.objectStore('planets').clear();
+      tx.oncomplete = () => res(true);
+      tx.onerror   = () => rej(tx.error);
+    });
+  }
+  return { open, put, get, clear };
+})();
+
+
+
+/* ===== Init ===== */
+(function init(){
+  const now=new Date();
+  const localISO = new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  caldate.value = localISO; // today as கணிப்புக்கான தேதி
+  applyLang();
+  drawChartGrid();
+})();
+
+(async function restoreLastSession(){
+  try{
+    if (!window.idbPlanets?.get) return;
+    const saved = await idbPlanets.get('latest');
+    if (!saved) return;
+
+    // 1) Put planets back into your globals
+    window.savedPlanetsForChart = saved.planets || null;
+
+    // also rebuild planetDegrees for the planet buttons/table
+    const allow = ['Ascendant','Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Rahu','Ketu'];
+    window.planetDegrees = {};
+    if (saved.planets) {
+      Object.keys(saved.planets).forEach(k=>{
+        if (allow.includes(k) && typeof saved.planets[k]?.fullDegree === 'number'){
+          planetDegrees[k] = saved.planets[k].fullDegree;
+        }
+      });
+    }
+
+    // 2) Restore inputs (if we saved them)
+    if (saved.inputs){
+      if (saved.inputs.dob)   dob_.value = saved.inputs.dob;
+      if (saved.inputs.caldate) caldate.value = saved.inputs.caldate;
+
+      if (saved.inputs.moon){
+        const {deg=0,min=0,sec=0} = saved.inputs.moon;
+        moon_deg.value = deg; moon_min.value = min; moon_sec.value = sec;
+      } else if (saved.planets?.Moon?.fullDegree != null){
+        // fallback: derive moon DMS from saved planets
+        const m = decToDMS(saved.planets.Moon.fullDegree);
+        moon_deg.value = m.deg; moon_min.value = m.min; moon_sec.value = m.sec;
+      }
+    }
+
+    // 3) Rebuild UI pieces that depend on planets
+    ensurePlanetButtons?.();
+    drawChartGrid?.();
+    if (window.savedPlanetsForChart) placePlanetsOnChart?.(window.savedPlanetsForChart);
+    if (saved.planets) buildPlanetsTable?.(saved.planets);
+
+    // 4) Compute & render everything for the restored state
+    run?.();
+  }catch(err){
+    console.error('Restore failed:', err);
+  }
+})();
+
+
+
+</script>
+<script>const dob_ = document.getElementById('dob');</script>
+</body>
+</html>
